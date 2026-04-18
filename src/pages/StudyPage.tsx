@@ -47,6 +47,8 @@ export function StudyPage() {
   const [loading, setLoading] = useState(true)
   const [flipped, setFlipped] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [sessionRated, setSessionRated] = useState(0)
+  const [sessionTarget, setSessionTarget] = useState(0)
 
   const refresh = useCallback(async () => {
     if (!deckId) {
@@ -74,17 +76,25 @@ export function StudyPage() {
   useEffect(() => {
     setActiveIndex(0)
     setFlipped(false)
+    setSessionRated(0)
+    setSessionTarget(0)
   }, [deckId])
+
+  useEffect(() => {
+    if (rows.length > 0 && sessionTarget === 0) {
+      setSessionTarget(rows.length)
+    }
+  }, [rows.length, sessionTarget])
 
   const safeIndex = Math.min(activeIndex, Math.max(0, rows.length - 1))
   const active = rows[safeIndex]
 
   const progress = useMemo(() => {
-    if (rows.length === 0) {
+    if (sessionTarget === 0) {
       return 0
     }
-    return ((activeIndex + 1) / rows.length) * 100
-  }, [activeIndex, rows.length])
+    return Math.min(100, (sessionRated / sessionTarget) * 100)
+  }, [sessionRated, sessionTarget])
 
   const speakFront = useCallback(() => {
     if (!deck || !active) {
@@ -107,6 +117,7 @@ export function StudyPage() {
     const next = applyRating(active.schedule, rating, Date.now())
     await saveScheduling(next)
     setFlipped(false)
+    setSessionRated((count) => count + 1)
     await refresh()
     setActiveIndex(0)
   }
@@ -183,7 +194,8 @@ export function StudyPage() {
 
       <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 999 }} />
       <Typography variant="caption" color="text.secondary">
-        Card {activeIndex + 1} of {rows.length}
+        Reviewed {sessionRated}
+        {sessionTarget > 0 ? ` of ${sessionTarget}` : ''} · {rows.length} in queue
       </Typography>
 
       <FlipCard
