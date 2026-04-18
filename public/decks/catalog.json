@@ -1,0 +1,12 @@
+{
+  "bundled": [
+    {
+      "file": "starter-ptBR-to-enUS.json",
+      "label": "Portuguese → US English starter"
+    },
+    {
+      "file": "starter-enUS-to-itIT.json",
+      "label": "US English → Italian starter"
+    }
+  ]
+}
