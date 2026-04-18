@@ -1,4 +1,3 @@
-import MenuBookIcon from '@mui/icons-material/MenuBook'
 import AppBar from '@mui/material/AppBar'
 import Box from '@mui/material/Box'
 import Container from '@mui/material/Container'
@@ -6,6 +5,10 @@ import IconButton from '@mui/material/IconButton'
 import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import { Link as RouterLink, Outlet, useNavigate } from 'react-router-dom'
+
+function appLogoSrc() {
+  return `${import.meta.env.BASE_URL.replace(/\/?$/, '/')}elephant-logo.png`
+}
 
 export function AppShell() {
   const navigate = useNavigate()
@@ -19,8 +22,14 @@ export function AppShell() {
             component={RouterLink}
             to="/"
             aria-label="home"
+            sx={{ p: 0.5 }}
           >
-            <MenuBookIcon />
+            <Box
+              component="img"
+              src={appLogoSrc()}
+              alt=""
+              sx={{ height: 32, width: 'auto', display: 'block' }}
+            />
           </IconButton>
           <Typography
             variant="h6"
