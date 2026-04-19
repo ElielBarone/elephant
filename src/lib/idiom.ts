@@ -25,3 +25,8 @@ export function idiomLabel(idiom: Idiom): string {
       return idiom
   }
 }
+
+export function idiomFlagUrl(idiom: Idiom): string {
+  const base = import.meta.env.BASE_URL.replace(/\/?$/, '/')
+  return `${base}flags/${idiom}.svg`
+}

@@ -10,7 +10,7 @@ import { normalizeRouterBasename } from '@/lib/router/basename'
 const theme = createTheme({
   palette: {
     mode: 'light',
-    primary: { main: '#0b2239' },
+    primary: { main: '#5b2dff' },
     secondary: { main: '#2a9d8f' },
   },
   shape: {

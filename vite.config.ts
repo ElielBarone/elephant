@@ -17,7 +17,7 @@ export default defineConfig({
         name: 'Elephant',
         short_name: 'Elephant',
         description: 'Flip cards with spaced repetition',
-        theme_color: '#0b2239',
+        theme_color: '#5b2dff',
         background_color: '#0b2239',
         display: 'standalone',
         start_url: '.',

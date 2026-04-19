@@ -5,6 +5,10 @@
       "label": "Portuguese → US English starter"
     },
     {
+      "file": "starter-itIT-to-ptBR.json",
+      "label": "Italian → Portuguese (Brazil) starter"
+    },
+    {
       "file": "starter-itIT-to-enUS.json",
       "label": "Italian → US English starter"
     }

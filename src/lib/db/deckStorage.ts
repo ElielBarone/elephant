@@ -203,6 +203,8 @@ export async function duplicateDeck(source: Deck, now: number): Promise<Deck> {
     phrases,
     createdAt: new Date(now).toISOString(),
     updatedAt: new Date(now).toISOString(),
+    ttsPromptEnabled: source.ttsPromptEnabled,
+    ttsAnswerEnabled: source.ttsAnswerEnabled,
   }
   await saveDeck(deck)
   const schedules = await listScheduling(source.id)

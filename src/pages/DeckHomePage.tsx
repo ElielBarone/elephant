@@ -10,11 +10,14 @@ import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
+import FormControlLabel from '@mui/material/FormControlLabel'
 import Stack from '@mui/material/Stack'
+import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { IdiomFlag } from '@/components/IdiomFlag'
 import { idiomLabel } from '@/lib/idiom'
 import {
   deleteDeck,
@@ -94,6 +97,16 @@ export function DeckHomePage() {
     navigate('/')
   }
 
+  const persistTtsField = async (patch: Pick<Deck, 'ttsPromptEnabled' | 'ttsAnswerEnabled'>) => {
+    const next: Deck = {
+      ...deck,
+      ...patch,
+      updatedAt: new Date().toISOString(),
+    }
+    await saveDeck(next)
+    setDeck(next)
+  }
+
   return (
     <Stack spacing={3}>
       <Box>
@@ -104,11 +117,63 @@ export function DeckHomePage() {
           {deck.title}
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
-          <Chip label={`Native: ${idiomLabel(deck.nativeIdiom)}`} />
-          <Chip label={`Learning: ${idiomLabel(deck.learningIdiom)}`} color="primary" />
+          <Chip
+            label="Native"
+            icon={<IdiomFlag idiom={deck.nativeIdiom} height={18} decorative />}
+            aria-label={`Native, ${idiomLabel(deck.nativeIdiom)}`}
+          />
+          <Chip
+            label="Learning"
+            icon={<IdiomFlag idiom={deck.learningIdiom} height={18} decorative />}
+            color="primary"
+            aria-label={`Learning, ${idiomLabel(deck.learningIdiom)}`}
+          />
           <Chip label={`${deck.phrases.length} cards`} variant="outlined" />
         </Stack>
       </Box>
+
+      <Stack spacing={0.5} sx={{ pl: 0.5 }}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={deck.ttsPromptEnabled !== false}
+              onChange={(_, checked) =>
+                void persistTtsField({ ttsPromptEnabled: checked }).catch(() => {
+                  setError('Could not save speech setting')
+                })
+              }
+            />
+          }
+          label={
+            <Stack direction="row" alignItems="center" spacing={0.75} component="span">
+              <Typography component="span" variant="body2">
+                Speak prompt
+              </Typography>
+              <IdiomFlag idiom={deck.learningIdiom} height={18} />
+            </Stack>
+          }
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={deck.ttsAnswerEnabled !== false}
+              onChange={(_, checked) =>
+                void persistTtsField({ ttsAnswerEnabled: checked }).catch(() => {
+                  setError('Could not save speech setting')
+                })
+              }
+            />
+          }
+          label={
+            <Stack direction="row" alignItems="center" spacing={0.75} component="span">
+              <Typography component="span" variant="body2">
+                Speak translation
+              </Typography>
+              <IdiomFlag idiom={deck.nativeIdiom} height={18} />
+            </Stack>
+          }
+        />
+      </Stack>
 
       {error ? <Alert severity="error">{error}</Alert> : null}
 

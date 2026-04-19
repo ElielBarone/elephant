@@ -16,6 +16,8 @@ export interface Deck {
   createdAt: string
   updatedAt: string
   sourceAsset?: string
+  ttsPromptEnabled?: boolean
+  ttsAnswerEnabled?: boolean
 }
 
 export type StudyPhase = 'learning' | 'review' | 'relearning'

@@ -23,6 +23,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
+import { IdiomFlag } from '@/components/IdiomFlag'
 import { idiomLabel } from '@/lib/idiom'
 import { deckCreateSchema, type DeckCreateValues } from '@/lib/forms/schemas'
 import {
@@ -162,9 +163,21 @@ export function HomePage() {
                 <CardActionArea onClick={() => navigate(`/deck/${deck.id}`)}>
                   <CardContent>
                     <Typography variant="h6">{deck.title}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {idiomLabel(deck.nativeIdiom)} → {idiomLabel(deck.learningIdiom)}
-                    </Typography>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={1}
+                      component="span"
+                      display="flex"
+                      sx={{ color: 'text.secondary' }}
+                      aria-label={`${idiomLabel(deck.nativeIdiom)} to ${idiomLabel(deck.learningIdiom)}`}
+                    >
+                      <IdiomFlag idiom={deck.nativeIdiom} height={22} decorative />
+                      <Typography variant="body2" component="span" aria-hidden>
+                        →
+                      </Typography>
+                      <IdiomFlag idiom={deck.learningIdiom} height={22} decorative />
+                    </Stack>
                     <Typography variant="caption" color="text.secondary">
                       {deck.phrases.length} cards
                     </Typography>
@@ -229,10 +242,17 @@ export function HomePage() {
                     label="Native language"
                     value={field.value}
                     onChange={(event) => field.onChange(event.target.value as Idiom)}
+                    renderValue={(value) => (
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <IdiomFlag idiom={value as Idiom} height={22} />
+                      </Stack>
+                    )}
                   >
                     {idiomValues.map((value) => (
-                      <MenuItem key={value} value={value}>
-                        {idiomLabel(value)}
+                      <MenuItem key={value} value={value} sx={{ minHeight: 48 }}>
+                        <Stack direction="row" alignItems="center" justifyContent="center" sx={{ width: 1, py: 0.5 }}>
+                          <IdiomFlag idiom={value} height={28} />
+                        </Stack>
                       </MenuItem>
                     ))}
                   </Select>
@@ -250,10 +270,17 @@ export function HomePage() {
                     label="Learning language"
                     value={field.value}
                     onChange={(event) => field.onChange(event.target.value as Idiom)}
+                    renderValue={(value) => (
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <IdiomFlag idiom={value as Idiom} height={22} />
+                      </Stack>
+                    )}
                   >
                     {idiomValues.map((value) => (
-                      <MenuItem key={value} value={value}>
-                        {idiomLabel(value)}
+                      <MenuItem key={value} value={value} sx={{ minHeight: 48 }}>
+                        <Stack direction="row" alignItems="center" justifyContent="center" sx={{ width: 1, py: 0.5 }}>
+                          <IdiomFlag idiom={value} height={28} />
+                        </Stack>
                       </MenuItem>
                     ))}
                   </Select>

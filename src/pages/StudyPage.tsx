@@ -1,4 +1,5 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import VolumeOffIcon from '@mui/icons-material/VolumeOff'
 import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
@@ -8,6 +9,7 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { IdiomFlag } from '@/components/IdiomFlag'
 import { FlipCard } from '@/components/FlipCard'
 import { RatingBar } from '@/components/RatingBar'
 import {
@@ -96,30 +98,41 @@ export function StudyPage() {
     return Math.min(100, (sessionRated / sessionTarget) * 100)
   }, [sessionRated, sessionTarget])
 
+  const promptTtsOn = deck?.ttsPromptEnabled !== false
+  const answerTtsOn = deck?.ttsAnswerEnabled !== false
+
   const speakVisibleSide = useCallback(() => {
     if (!deck || !active) {
       return
     }
     if (flipped) {
+      if (deck.ttsAnswerEnabled === false) {
+        return
+      }
       speakWithIdiom(active.phrase.translated, deck.nativeIdiom)
     } else {
+      if (deck.ttsPromptEnabled === false) {
+        return
+      }
       speakWithIdiom(active.phrase.original, deck.learningIdiom)
     }
   }, [active, deck, flipped])
 
   useEffect(() => {
-    if (!active || !deck) {
+    if (!active || !deck || deck.ttsPromptEnabled === false) {
       return
     }
     speakWithIdiom(active.phrase.original, deck.learningIdiom)
-  }, [active?.phrase.id, deck])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card id or prompt TTS flag changes
+  }, [active?.phrase.id, deck?.id, deck?.ttsPromptEnabled])
 
   useEffect(() => {
-    if (!active || !deck || !flipped) {
+    if (!active || !deck || !flipped || deck.ttsAnswerEnabled === false) {
       return
     }
     speakWithIdiom(active.phrase.translated, deck.nativeIdiom)
-  }, [active?.phrase.id, flipped, deck])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card, flip, or answer TTS flag changes
+  }, [active?.phrase.id, flipped, deck?.id, deck?.ttsAnswerEnabled])
 
   const handleRate = async (rating: Rating) => {
     if (!active) {
@@ -171,6 +184,8 @@ export function StudyPage() {
 
   const hasDue = rows.some((row) => row.schedule.due <= Date.now())
 
+  const speakButtonDisabled = flipped ? !answerTtsOn : !promptTtsOn
+
   return (
     <Stack spacing={2.5}>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -181,12 +196,31 @@ export function StudyPage() {
           <Typography variant="subtitle2" color="text.secondary">
             {deck.title}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {idiomLabel(deck.learningIdiom)} prompt · {idiomLabel(deck.nativeIdiom)} answer
-          </Typography>
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={0.75}
+            flexWrap="wrap"
+            useFlexGap
+            sx={{ color: 'text.secondary' }}
+            aria-label={`${idiomLabel(deck.learningIdiom)} prompt, ${idiomLabel(deck.nativeIdiom)} answer`}
+          >
+            <IdiomFlag idiom={deck.learningIdiom} height={16} decorative />
+            <Typography variant="caption" component="span">
+              prompt ·
+            </Typography>
+            <IdiomFlag idiom={deck.nativeIdiom} height={16} decorative />
+            <Typography variant="caption" component="span">
+              answer
+            </Typography>
+          </Stack>
         </Box>
-        <IconButton aria-label="speak visible side" onClick={() => speakVisibleSide()}>
-          <VolumeUpIcon />
+        <IconButton
+          aria-label="speak visible side"
+          disabled={speakButtonDisabled}
+          onClick={() => speakVisibleSide()}
+        >
+          {speakButtonDisabled ? <VolumeOffIcon /> : <VolumeUpIcon />}
         </IconButton>
       </Stack>
 
