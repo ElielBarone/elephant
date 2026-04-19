@@ -96,19 +96,30 @@ export function StudyPage() {
     return Math.min(100, (sessionRated / sessionTarget) * 100)
   }, [sessionRated, sessionTarget])
 
-  const speakFront = useCallback(() => {
+  const speakVisibleSide = useCallback(() => {
     if (!deck || !active) {
       return
     }
-    speakWithIdiom(active.phrase.original, deck.learningIdiom)
-  }, [active, deck])
+    if (flipped) {
+      speakWithIdiom(active.phrase.translated, deck.nativeIdiom)
+    } else {
+      speakWithIdiom(active.phrase.original, deck.learningIdiom)
+    }
+  }, [active, deck, flipped])
 
   useEffect(() => {
-    if (!active || flipped) {
+    if (!active || !deck) {
       return
     }
-    speakFront()
-  }, [active, flipped, speakFront])
+    speakWithIdiom(active.phrase.original, deck.learningIdiom)
+  }, [active?.phrase.id, deck])
+
+  useEffect(() => {
+    if (!active || !deck || !flipped) {
+      return
+    }
+    speakWithIdiom(active.phrase.translated, deck.nativeIdiom)
+  }, [active?.phrase.id, flipped, deck])
 
   const handleRate = async (rating: Rating) => {
     if (!active) {
@@ -174,7 +185,7 @@ export function StudyPage() {
             {idiomLabel(deck.learningIdiom)} prompt · {idiomLabel(deck.nativeIdiom)} answer
           </Typography>
         </Box>
-        <IconButton aria-label="speak prompt" onClick={() => speakFront()}>
+        <IconButton aria-label="speak visible side" onClick={() => speakVisibleSide()}>
           <VolumeUpIcon />
         </IconButton>
       </Stack>

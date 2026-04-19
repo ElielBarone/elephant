@@ -1,0 +1,299 @@
+{
+  "title": "Italian → English Common Phrases (South Italy Focus)",
+  "nativeIdiom": "enUS",
+  "learningIdiom": "itIT",
+  "phrases": [
+    {
+      "original": "Ciao",
+      "translated": "Hello / Bye"
+    },
+    {
+      "original": "Buongiorno",
+      "translated": "Good morning"
+    },
+    {
+      "original": "Buonasera",
+      "translated": "Good evening"
+    },
+    {
+      "original": "A dopo",
+      "translated": "See you later"
+    },
+    {
+      "original": "A presto",
+      "translated": "See you soon"
+    },
+    {
+      "original": "Per favore",
+      "translated": "Please"
+    },
+    {
+      "original": "Per piacere",
+      "translated": "Please (casual)"
+    },
+    {
+      "original": "Grazie",
+      "translated": "Thank you"
+    },
+    {
+      "original": "Grazie mille",
+      "translated": "Thank you very much"
+    },
+    {
+      "original": "Prego",
+      "translated": "You're welcome"
+    },
+    {
+      "original": "Non capisco",
+      "translated": "I don’t understand"
+    },
+    {
+      "original": "Capito",
+      "translated": "Got it"
+    },
+    {
+      "original": "Ripeti, per favore",
+      "translated": "Repeat, please"
+    },
+    {
+      "original": "Parla piano",
+      "translated": "Speak slowly"
+    },
+    {
+      "original": "Come si dice?",
+      "translated": "How do you say?"
+    },
+    {
+      "original": "Sono brasiliano",
+      "translated": "I am Brazilian"
+    },
+    {
+      "original": "Mi chiamo",
+      "translated": "My name is"
+    },
+    {
+      "original": "Piacere",
+      "translated": "Nice to meet you"
+    },
+    {
+      "original": "Quanto costa?",
+      "translated": "How much is it?"
+    },
+    {
+      "original": "Va bene",
+      "translated": "Okay"
+    },
+    {
+      "original": "Non va",
+      "translated": "It doesn’t work"
+    },
+    {
+      "original": "Ho fame",
+      "translated": "I’m hungry"
+    },
+    {
+      "original": "Ho sete",
+      "translated": "I’m thirsty"
+    },
+    {
+      "original": "Il conto",
+      "translated": "The bill"
+    },
+    {
+      "original": "Dov’è?",
+      "translated": "Where is it?"
+    },
+    {
+      "original": "Qui vicino",
+      "translated": "Nearby"
+    },
+    {
+      "original": "A sinistra",
+      "translated": "Left"
+    },
+    {
+      "original": "A destra",
+      "translated": "Right"
+    },
+    {
+      "original": "Sempre dritto",
+      "translated": "Straight ahead"
+    },
+    {
+      "original": "Un caffè",
+      "translated": "One coffee"
+    },
+    {
+      "original": "Un’acqua",
+      "translated": "One water"
+    },
+    {
+      "original": "Ancora uno",
+      "translated": "One more"
+    },
+    {
+      "original": "Basta così",
+      "translated": "That’s enough"
+    },
+    {
+      "original": "Tutto buono",
+      "translated": "Everything is good"
+    },
+    {
+      "original": "Tutto bene?",
+      "translated": "All good?"
+    },
+    {
+      "original": "Magari",
+      "translated": "Maybe / I wish"
+    },
+    {
+      "original": "Dai",
+      "translated": "Come on"
+    },
+    {
+      "original": "Che bello",
+      "translated": "Nice!"
+    },
+    {
+      "original": "Figurati",
+      "translated": "No worries"
+    },
+    {
+      "original": "Biglietto",
+      "translated": "Ticket"
+    },
+    {
+      "original": "Solo andata",
+      "translated": "One way"
+    },
+    {
+      "original": "Andata e ritorno",
+      "translated": "Round trip"
+    },
+    {
+      "original": "A che ora?",
+      "translated": "What time?"
+    },
+    {
+      "original": "È in ritardo",
+      "translated": "It’s late"
+    },
+    {
+      "original": "Subito",
+      "translated": "Immediately"
+    },
+    {
+      "original": "Tra poco",
+      "translated": "Soon"
+    },
+    {
+      "original": "Stasera",
+      "translated": "Tonight"
+    },
+    {
+      "original": "Domani",
+      "translated": "Tomorrow"
+    },
+    {
+      "original": "Ci vediamo",
+      "translated": "See you"
+    },
+    {
+      "original": "Sto lavorando",
+      "translated": "I’m working"
+    },
+    {
+      "original": "Ho finito",
+      "translated": "I finished"
+    },
+    {
+      "original": "Devo fare",
+      "translated": "I have to do"
+    },
+    {
+      "original": "Facciamo così",
+      "translated": "Let’s do this"
+    },
+    {
+      "original": "Ci penso",
+      "translated": "I’ll think about it"
+    },
+    {
+      "original": "Pago io",
+      "translated": "I pay"
+    },
+    {
+      "original": "Dividiamo",
+      "translated": "Let’s split"
+    },
+    {
+      "original": "Troppo caro",
+      "translated": "Too expensive"
+    },
+    {
+      "original": "Quanto pago?",
+      "translated": "How much do I pay?"
+    },
+    {
+      "original": "Aiuto",
+      "translated": "Help"
+    },
+    {
+      "original": "È urgente",
+      "translated": "It’s urgent"
+    },
+    {
+      "original": "Sto male",
+      "translated": "I feel sick"
+    },
+    {
+      "original": "Chiama aiuto",
+      "translated": "Call help"
+    },
+    {
+      "original": "È aperto?",
+      "translated": "Is it open?"
+    },
+    {
+      "original": "È chiuso",
+      "translated": "It’s closed"
+    },
+    {
+      "original": "Serve altro?",
+      "translated": "Anything else?"
+    },
+    {
+      "original": "Mi fa male",
+      "translated": "It hurts"
+    },
+    {
+      "original": "Ho bisogno",
+      "translated": "I need"
+    },
+    {
+      "original": "Troppo stanco",
+      "translated": "Very tired"
+    },
+    {
+      "original": "Uè",
+      "translated": "Hey!"
+    },
+    {
+      "original": "Oh",
+      "translated": "Hey"
+    },
+    {
+      "original": "Ma dai",
+      "translated": "Come on!"
+    },
+    {
+      "original": "Ci sta",
+      "translated": "Makes sense"
+    },
+    {
+      "original": "Dai su",
+      "translated": "Let’s go"
+    }
+  ]
+}
