@@ -12,6 +12,7 @@ const theme = createTheme({
     mode: 'light',
     primary: { main: '#5b2dff' },
     secondary: { main: '#2a9d8f' },
+    background: { default: 'rgb(229 224 249 / 50%)' },
   },
   shape: {
     borderRadius: 12,

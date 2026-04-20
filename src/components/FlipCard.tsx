@@ -43,6 +43,7 @@ export function FlipCard({
         sx={{
           position: 'relative',
           width: '100%',
+          height: '100%',
           minHeight: 240,
           transformStyle: 'preserve-3d',
           transition: 'transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1)',
@@ -50,13 +51,14 @@ export function FlipCard({
         }}
       >
         <Paper
-          elevation={3}
+             
           sx={{
             position: 'absolute',
             inset: 0,
             p: 2.5,
             display: 'flex',
             flexDirection: 'column',
+            alignItems: 'center',
             justifyContent: 'center',
             backfaceVisibility: 'hidden',
             borderRadius: 3,
@@ -73,7 +75,7 @@ export function FlipCard({
           </Typography>
         </Paper>
         <Paper
-          elevation={3}
+          
           sx={{
             position: 'absolute',
             inset: 0,
@@ -81,6 +83,7 @@ export function FlipCard({
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
+            alignItems: 'center',
             transform: 'rotateY(180deg)',
             backfaceVisibility: 'hidden',
             borderRadius: 3,

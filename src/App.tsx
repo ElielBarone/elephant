@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/components/AppShell'
+import { SplashScreenProvider } from '@/components/SplashScreen'
 import { WelcomeSplash } from '@/components/WelcomeSplash'
 import { DeckHomePage } from '@/pages/DeckHomePage'
 import { HomePage } from '@/pages/HomePage'
@@ -8,7 +9,7 @@ import { StudyPage } from '@/pages/StudyPage'
 
 export default function App() {
   return (
-    <>
+    <SplashScreenProvider>
       <WelcomeSplash />
       <Routes>
         <Route element={<AppShell />}>
@@ -19,6 +20,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
-    </>
+    </SplashScreenProvider>
   )
 }

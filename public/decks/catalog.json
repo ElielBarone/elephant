@@ -2,15 +2,21 @@
   "bundled": [
     {
       "file": "starter-ptBR-to-enUS.json",
-      "label": "Portuguese → US English starter"
+      "label": "Portuguese → US English starter",
+      "nativeIdiom": "ptBR",
+      "learningIdiom": "enUS"
     },
     {
       "file": "starter-itIT-to-ptBR.json",
-      "label": "Italian → Portuguese (Brazil) starter"
+      "label": "Italian → Portuguese (Brazil) starter",
+      "nativeIdiom": "itIT",
+      "learningIdiom": "ptBR"
     },
     {
       "file": "starter-itIT-to-enUS.json",
-      "label": "Italian → US English starter"
+      "label": "Italian → US English starter",
+      "nativeIdiom": "itIT",
+      "learningIdiom": "enUS"
     }
   ]
 }

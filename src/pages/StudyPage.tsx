@@ -3,15 +3,17 @@ import VolumeOffIcon from '@mui/icons-material/VolumeOff'
 import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import IconButton from '@mui/material/IconButton'
 import LinearProgress from '@mui/material/LinearProgress'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { IdiomFlag } from '@/components/IdiomFlag'
+import { FlagsRelated } from '@/components/FlagsRelated'
 import { FlipCard } from '@/components/FlipCard'
 import { RatingBar } from '@/components/RatingBar'
+import { useSplashScreen } from '@/components/SplashScreen'
 import {
   ensureSchedulingForDeck,
   getDeck,
@@ -44,6 +46,7 @@ function buildRows(deck: Deck, schedules: CardSchedule[], now: number): StudyRow
 export function StudyPage() {
   const { deckId } = useParams()
   const navigate = useNavigate()
+  const [, splashScreenActions] = useSplashScreen()
   const [deck, setDeck] = useState<Deck | null>(null)
   const [rows, setRows] = useState<StudyRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,6 +54,7 @@ export function StudyPage() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [sessionRated, setSessionRated] = useState(0)
   const [sessionTarget, setSessionTarget] = useState(0)
+  const completionSplashVisible = useRef(false)
 
   const refresh = useCallback(async () => {
     if (!deckId) {
@@ -80,6 +84,7 @@ export function StudyPage() {
     setFlipped(false)
     setSessionRated(0)
     setSessionTarget(0)
+    completionSplashVisible.current = false
   }, [deckId])
 
   useEffect(() => {
@@ -87,6 +92,45 @@ export function StudyPage() {
       setSessionTarget(rows.length)
     }
   }, [rows.length, sessionTarget])
+
+  useEffect(() => {
+    if (!deck || sessionTarget === 0 || sessionRated < sessionTarget || completionSplashVisible.current) {
+      return
+    }
+
+    const startAgain = () => {
+      setFlipped(false)
+      setActiveIndex(0)
+      setSessionRated(0)
+      setSessionTarget(rows.length)
+      completionSplashVisible.current = false
+      splashScreenActions.hide()
+    }
+
+    const openDecks = () => {
+      splashScreenActions.hide()
+      navigate('/')
+    }
+
+    splashScreenActions.show(
+      'well-done',
+      {
+        title: 'Congratulations!',
+        message: "I'm proud of you, come back tomorrow.",
+      },
+      'happy',
+      <Stack spacing={1.5}>        
+        <Button variant="contained" onClick={openDecks}>
+          Back to Decks
+        </Button>
+        <Button variant="outlined" onClick={startAgain}>
+          Start Again
+        </Button>
+      </Stack>,
+      0,
+    )
+    completionSplashVisible.current = true
+  }, [deck, navigate, rows.length, sessionRated, sessionTarget, splashScreenActions])
 
   const safeIndex = Math.min(activeIndex, Math.max(0, rows.length - 1))
   const active = rows[safeIndex]
@@ -193,9 +237,7 @@ export function StudyPage() {
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="subtitle2" color="text.secondary">
-            {deck.title}
-          </Typography>
+          
           <Stack
             direction="row"
             alignItems="center"
@@ -205,14 +247,17 @@ export function StudyPage() {
             sx={{ color: 'text.secondary' }}
             aria-label={`${idiomLabel(deck.learningIdiom)} prompt, ${idiomLabel(deck.nativeIdiom)} answer`}
           >
-            <IdiomFlag idiom={deck.learningIdiom} height={16} decorative />
-            <Typography variant="caption" component="span">
-              prompt ·
-            </Typography>
-            <IdiomFlag idiom={deck.nativeIdiom} height={16} decorative />
-            <Typography variant="caption" component="span">
-              answer
-            </Typography>
+            
+            <FlagsRelated
+              firstIdiom={deck.learningIdiom}
+              secondIdiom={deck.nativeIdiom}
+              height={22}
+            />
+
+<Typography variant="subtitle2" color="text.secondary">
+            {deck.title}
+          </Typography>
+            
           </Stack>
         </Box>
         <IconButton

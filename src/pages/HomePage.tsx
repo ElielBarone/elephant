@@ -1,11 +1,7 @@
 import AddIcon from '@mui/icons-material/Add'
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
-import Card from '@mui/material/Card'
-import CardActionArea from '@mui/material/CardActionArea'
-import CardContent from '@mui/material/CardContent'
 import CircularProgress from '@mui/material/CircularProgress'
 import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
@@ -23,8 +19,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
+import { CardAvailableDeck } from '@/components/CardAvailableDeck'
+import { DeckCard } from '@/components/DeckCard'
 import { IdiomFlag } from '@/components/IdiomFlag'
-import { idiomLabel } from '@/lib/idiom'
 import { deckCreateSchema, type DeckCreateValues } from '@/lib/forms/schemas'
 import {
   copyBundledDeck,
@@ -33,14 +30,20 @@ import {
 } from '@/lib/db/deckStorage'
 import type { Deck, Idiom } from '@/types/models'
 import { idiomValues } from '@/types/models'
+import { CardNewItem } from '@/components/CardNewItem'
 
 interface CatalogPayload {
-  bundled: Array<{ file: string; label: string }>
+  bundled: Array<{
+    file: string
+    label: string
+    nativeIdiom: Idiom
+    learningIdiom: Idiom
+  }>
 }
 
 export function HomePage() {
   const navigate = useNavigate()
-  const [decks, setDecks] = useState<Deck[] | null>(null)
+  const [decks, setDecks] = useState<Deck[]>([])
   const [catalog, setCatalog] = useState<CatalogPayload | null>(null)
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [busyFile, setBusyFile] = useState<string | null>(null)
@@ -125,68 +128,35 @@ export function HomePage() {
   })
 
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="h4" component="h1" gutterBottom>
+    <Stack spacing={3}>      
+
+        <Typography variant="h4" component="h1" gutterBottom color="primary">
           Decks
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Pick a deck to study. Bundled starters copy into this device the first time you add them.
-        </Typography>
-      </Box>
+  
 
       {formError ? <Alert severity="error">{formError}</Alert> : null}
       {catalogError ? <Alert severity="warning">{catalogError}</Alert> : null}
 
       <Box>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-          <Typography variant="h6">Your decks</Typography>
-          <Button
-            startIcon={<AddIcon />}
-            variant="contained"
-            size="small"
-            onClick={() => setCreateOpen(true)}
-          >
-            New deck
-          </Button>
-        </Stack>
-        {decks == null ? (
-          <Stack alignItems="center" sx={{ py: 4 }}>
-            <CircularProgress />
-          </Stack>
-        ) : decks.length === 0 ? (
-          <Typography color="text.secondary">No decks yet. Add a starter or create your own.</Typography>
-        ) : (
+        
+        {
           <Stack spacing={1.5}>
             {decks.map((deck) => (
-              <Card key={deck.id} variant="outlined">
-                <CardActionArea onClick={() => navigate(`/deck/${deck.id}`)}>
-                  <CardContent>
-                    <Typography variant="h6">{deck.title}</Typography>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      spacing={1}
-                      component="span"
-                      display="flex"
-                      sx={{ color: 'text.secondary' }}
-                      aria-label={`${idiomLabel(deck.nativeIdiom)} to ${idiomLabel(deck.learningIdiom)}`}
-                    >
-                      <IdiomFlag idiom={deck.nativeIdiom} height={22} decorative />
-                      <Typography variant="body2" component="span" aria-hidden>
-                        →
-                      </Typography>
-                      <IdiomFlag idiom={deck.learningIdiom} height={22} decorative />
-                    </Stack>
-                    <Typography variant="caption" color="text.secondary">
-                      {deck.phrases.length} cards
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
+              <DeckCard
+                key={deck.id}
+                deck={deck}
+                onOpen={() => navigate(`/deck/${deck.id}`)}
+              />
             ))}
+            <CardNewItem
+            label="New Deck"
+            icon={<AddIcon />}
+            minHeight={72}
+            onClick={() => setCreateOpen(true)}
+          />
           </Stack>
-        )}
+        }
       </Box>
 
       <Divider />
@@ -200,21 +170,15 @@ export function HomePage() {
         ) : (
           <Stack spacing={1.5}>
             {catalog?.bundled.map((entry) => (
-              <Card key={entry.file} variant="outlined">
-                <CardContent>
-                  <Stack spacing={1.5}>
-                    <Typography variant="subtitle1">{entry.label}</Typography>
-                    <Button
-                      variant="outlined"
-                      startIcon={<CloudDownloadIcon />}
-                      disabled={busyFile != null}
-                      onClick={() => void handleInstallBundled(entry.file)}
-                    >
-                      {busyFile === entry.file ? 'Copying…' : 'Copy to this device'}
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
+              <CardAvailableDeck
+                key={entry.file}
+                label={entry.label}
+                nativeIdiom={entry.nativeIdiom}
+                learningIdiom={entry.learningIdiom}
+                disabled={busyFile != null}
+                copying={busyFile === entry.file}
+                onCopy={() => handleInstallBundled(entry.file)}
+              />
             ))}
           </Stack>
         )}

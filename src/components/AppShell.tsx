@@ -14,7 +14,7 @@ export function AppShell() {
   const navigate = useNavigate()
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
-      <AppBar position="sticky" color="transparent" elevation={0}>
+      <AppBar position="sticky" color="default" elevation={0}>
         <Toolbar sx={{ gap: 1, borderBottom: 1, borderColor: 'divider' }}>
           <IconButton
             edge="start"
