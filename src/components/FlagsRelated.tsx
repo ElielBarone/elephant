@@ -12,7 +12,7 @@ export function FlagsRelated({ firstIdiom, secondIdiom, height = 24 }: FlagsRela
   const marginLeft = -height/14;
 
   return (
-    <div>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
       <IdiomFlag idiom={secondIdiom} height={height} />
       <IdiomFlag idiom={firstIdiom} height={height} sx={{ marginLeft, marginTop}} />
     </div>

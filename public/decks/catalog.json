@@ -2,19 +2,19 @@
   "bundled": [
     {
       "file": "starter-ptBR-to-enUS.json",
-      "label": "Portuguese → US English starter",
+      "label": "US English wolf of wall street",
       "nativeIdiom": "ptBR",
       "learningIdiom": "enUS"
     },
     {
       "file": "starter-itIT-to-ptBR.json",
-      "label": "Italian → Portuguese (Brazil) starter",
+      "label": "Italian Giulia starter",
       "nativeIdiom": "itIT",
       "learningIdiom": "ptBR"
     },
     {
       "file": "starter-itIT-to-enUS.json",
-      "label": "Italian → US English starter",
+      "label": "Italian Giulia starter",
       "nativeIdiom": "itIT",
       "learningIdiom": "enUS"
     }
