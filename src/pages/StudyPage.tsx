@@ -23,11 +23,19 @@ import {
 import { idiomLabel } from '@/lib/idiom'
 import { applyRating, sortDueFirst } from '@/lib/scheduler/scheduler'
 import { speakWithIdiom } from '@/lib/tts/speak'
+import { createSpeechRecognizer, arePhrasesSimilar } from '@/lib/voice/speechRecognition'
 import type { CardSchedule, Deck, Phrase, Rating } from '@/types/models'
 
 interface StudyRow {
   phrase: Phrase
   schedule: CardSchedule
+}
+
+const speechLanguageByIdiom: Record<string, string> = {
+  ptBR: 'pt-BR',
+  enUS: 'en-US',
+  enGB: 'en-GB',
+  itIT: 'it-IT',
 }
 
 function buildRows(deck: Deck, schedules: CardSchedule[], now: number): StudyRow[] {
@@ -54,6 +62,11 @@ export function StudyPage() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [sessionRated, setSessionRated] = useState(0)
   const [sessionTarget, setSessionTarget] = useState(0)
+  const [speechSupported, setSpeechSupported] = useState<boolean | null>(null)
+  const [listening, setListening] = useState(false)
+  const [speechTranscript, setSpeechTranscript] = useState('')
+  const [speechError, setSpeechError] = useState<string | null>(null)
+  const speechRecognizerRef = useRef<ReturnType<typeof createSpeechRecognizer> | null>(null)
   const completionSplashVisible = useRef(false)
 
   const refresh = useCallback(async () => {
@@ -178,6 +191,73 @@ export function StudyPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card, flip, or answer TTS flag changes
   }, [active?.phrase.id, flipped, deck?.id, deck?.ttsAnswerEnabled])
 
+  useEffect(() => {
+    if (!active || !deck || flipped) {
+      return
+    }
+
+    const language = speechLanguageByIdiom[deck.learningIdiom] ?? 'en-US'
+    let isCurrent = true
+
+    setSpeechError(null)
+    setSpeechTranscript('')
+
+    const recognizer = createSpeechRecognizer({
+      lang: language,
+      continuous: true,
+      interimResults: false,
+      maxAlternatives: 1,
+      onStart: () => {
+        if (!isCurrent) {
+          return
+        }
+        setListening(true)
+      },
+      onResult: (transcript) => {
+        if (!isCurrent) {
+          return
+        }
+        setSpeechTranscript(transcript)
+        if (arePhrasesSimilar(active.phrase.original, transcript)) {
+          setFlipped(true)
+        }
+      },
+      onError: (message) => {
+        if (!isCurrent) {
+          return
+        }
+        setSpeechError(message)
+      },
+      onEnd: () => {
+        if (!isCurrent) {
+          return
+        }
+        setListening(false)
+      },
+    })
+
+    speechRecognizerRef.current = recognizer
+    setSpeechSupported(recognizer.isSupported)
+
+    if (!recognizer.isSupported) {
+      setSpeechError('Speech recognition is unavailable in this browser.')
+      return
+    }
+
+    try {
+      recognizer.start()
+    } catch (error) {
+      setSpeechError(error instanceof Error ? error.message : String(error))
+    }
+
+    return () => {
+      isCurrent = false
+      recognizer.stop()
+      speechRecognizerRef.current = null
+      setListening(false)
+    }
+  }, [active?.phrase.id, active?.phrase.original, deck?.learningIdiom, flipped])
+
   const handleRate = async (rating: Rating) => {
     if (!active) {
       return
@@ -297,6 +377,24 @@ export function StudyPage() {
           flipped={flipped}
           onToggle={() => setFlipped((value) => !value)}
         />
+        <Typography
+          variant="caption"
+          color={speechError ? 'error.main' : 'text.secondary'}
+          sx={{ mt: 1 }}
+        >
+          {speechError
+            ? speechError
+            : speechSupported === false
+            ? 'Speech recognition not available. Tap to flip manually.'
+            : listening
+            ? 'Listening for your pronunciation…'
+            : 'Speak the prompt aloud to flip the card.'}
+        </Typography>
+        {speechTranscript ? (
+          <Typography variant="caption" color="text.secondary">
+            Heard: {speechTranscript}
+          </Typography>
+        ) : null}
       </Box>
 
       <RatingBar disabled={!flipped} onRate={(rating) => void handleRate(rating)} />
