@@ -1,7 +1,8 @@
 import Box from '@mui/material/Box'
 import { idiomFlagUrl, idiomLabel } from '@/lib/idiom'
 import type { Idiom } from '@/types/models'
-import type { SxProps, Theme } from '@mui/material'
+import { useTheme, type SxProps, type Theme } from '@mui/material'
+
 
 interface IdiomFlagProps {
   idiom: Idiom
@@ -11,7 +12,8 @@ interface IdiomFlagProps {
 }
 
 export function IdiomFlag({ idiom, height = 20, decorative = false, sx }: IdiomFlagProps) {
-  const width = Math.round((height * 4) / 3)
+  const width = Math.round((height * 4) / 3);
+  const theme = useTheme();
   
   return (
     <Box
@@ -22,7 +24,7 @@ export function IdiomFlag({ idiom, height = 20, decorative = false, sx }: IdiomF
       sx={{
         width,
         height,
-        border: '2px solid white',
+        border: `2px solid ${theme.palette.background.paper}`,
         objectFit: 'cover',
         borderRadius: 0.4,
         verticalAlign: 'middle',        

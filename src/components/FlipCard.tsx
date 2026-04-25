@@ -34,9 +34,13 @@ export function FlipCard({
       sx={{
         perspective: 1200,
         width: '100%',
-        minHeight: 240,
+        height: '100%',
+        flex: 1,
+        minWidth: 0,
         cursor: 'pointer',
         touchAction: 'manipulation',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       <Box
@@ -44,7 +48,8 @@ export function FlipCard({
           position: 'relative',
           width: '100%',
           height: '100%',
-          minHeight: 240,
+          flex: 1,
+          minHeight: 0,
           transformStyle: 'preserve-3d',
           transition: 'transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1)',
           transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',

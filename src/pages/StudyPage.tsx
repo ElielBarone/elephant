@@ -231,7 +231,7 @@ export function StudyPage() {
   const speakButtonDisabled = flipped ? !answerTtsOn : !promptTtsOn
 
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={2.5} sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', minHeight: 0 }}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <IconButton aria-label="back" onClick={() => navigate(`/deck/${deck.id}`)}>
           <ArrowBackIcon />
@@ -288,14 +288,16 @@ export function StudyPage() {
         {sessionTarget > 0 ? ` of ${sessionTarget}` : ''} · {rows.length} in queue
       </Typography>
 
-      <FlipCard
-        frontTitle="Prompt"
-        backTitle="Translation"
-        frontText={active.phrase.original}
-        backText={active.phrase.translated}
-        flipped={flipped}
-        onToggle={() => setFlipped((value) => !value)}
-      />
+      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <FlipCard
+          frontTitle="Prompt"
+          backTitle="Translation"
+          frontText={active.phrase.original}
+          backText={active.phrase.translated}
+          flipped={flipped}
+          onToggle={() => setFlipped((value) => !value)}
+        />
+      </Box>
 
       <RatingBar disabled={!flipped} onRate={(rating) => void handleRate(rating)} />
     </Stack>
