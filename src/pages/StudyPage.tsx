@@ -24,6 +24,7 @@ import { idiomLabel } from '@/lib/idiom'
 import { applyRating, sortDueFirst } from '@/lib/scheduler/scheduler'
 import { speakWithIdiom } from '@/lib/tts/speak'
 import { createSpeechRecognizer, arePhrasesSimilar } from '@/lib/voice/speechRecognition'
+import { getRatingFromTranscript } from '@/lib/voice/ratingCommands'
 import type { CardSchedule, Deck, Phrase, Rating } from '@/types/models'
 
 interface StudyRow {
@@ -270,6 +271,56 @@ export function StudyPage() {
     setActiveIndex(0)
   }
 
+  useEffect(() => {
+    if (!active || !deck || !flipped) {
+      return
+    }
+
+    const language = speechLanguageByIdiom[deck.nativeIdiom] ?? 'en-US'
+    let isCurrent = true
+
+    const ratingRecognizer = createSpeechRecognizer({
+      lang: language,
+      continuous: true,
+      interimResults: false,
+      maxAlternatives: 1,
+      onStart: () => {
+        if (!isCurrent) {
+          return
+        }
+        // Rating listening started
+      },
+      onResult: (transcript) => {
+        if (!isCurrent) {
+          return
+        }
+        const rating = getRatingFromTranscript(transcript, deck.nativeIdiom)
+        if (rating) {
+          void handleRate(rating)
+        }
+      },
+      onError: () => {
+        // Rating recognition error - silently ignore
+      },
+      onEnd: () => {
+        // Rating listening ended
+      },
+    })
+
+    if (ratingRecognizer.isSupported) {
+      try {
+        ratingRecognizer.start()
+      } catch (error) {
+        // Silently handle rating recognition start errors
+      }
+    }
+
+    return () => {
+      isCurrent = false
+      ratingRecognizer.stop()
+    }
+  }, [active?.phrase.id, deck?.nativeIdiom, flipped, handleRate])
+
   if (!deckId) {
     return <Alert severity="error">Missing deck</Alert>
   }
@@ -388,6 +439,8 @@ export function StudyPage() {
             ? 'Speech recognition not available. Tap to flip manually.'
             : listening
             ? 'Listening for your pronunciation…'
+            : flipped
+            ? 'Say "hard", "good", or "easy" to rate the card.'
             : 'Speak the prompt aloud to flip the card.'}
         </Typography>
         {speechTranscript ? (
