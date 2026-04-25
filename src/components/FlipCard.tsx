@@ -72,7 +72,7 @@ export function FlipCard({
           <Typography variant="overline" color="text.secondary">
             {frontTitle}
           </Typography>
-          <Typography variant="h5" sx={{ mt: 1, wordBreak: 'break-word' }}>
+          <Typography variant="h5" sx={{ mt: 1, wordBreak: 'break-word', textAlign: 'center' }}>
             {frontText}
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 2 }}>
@@ -99,7 +99,7 @@ export function FlipCard({
           <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.72)' }}>
             {backTitle}
           </Typography>
-          <Typography variant="h5" sx={{ mt: 1, wordBreak: 'break-word' }}>
+          <Typography variant="h5" sx={{ mt: 1, wordBreak: 'break-word', textAlign: 'center' }}>
             {backText}
           </Typography>
           <Typography variant="caption" sx={{ mt: 2, color: 'rgba(255,255,255,0.72)' }}>

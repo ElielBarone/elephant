@@ -259,7 +259,7 @@ export function StudyPage() {
     }
   }, [active?.phrase.id, active?.phrase.original, deck?.learningIdiom, flipped])
 
-  const handleRate = async (rating: Rating) => {
+  const handleRate = useCallback(async (rating: Rating) => {
     if (!active) {
       return
     }
@@ -269,14 +269,14 @@ export function StudyPage() {
     setSessionRated((count) => count + 1)
     await refresh()
     setActiveIndex(0)
-  }
+  }, [active, refresh])
 
   useEffect(() => {
     if (!active || !deck || !flipped) {
       return
     }
 
-    const language = speechLanguageByIdiom[deck.nativeIdiom] ?? 'en-US'
+    const language = 'en-US' // Use English for rating recognition since most commands are English-based
     let isCurrent = true
 
     const ratingRecognizer = createSpeechRecognizer({
@@ -294,7 +294,7 @@ export function StudyPage() {
         if (!isCurrent) {
           return
         }
-        const rating = getRatingFromTranscript(transcript, deck.nativeIdiom)
+        const rating = getRatingFromTranscript(transcript)
         if (rating) {
           void handleRate(rating)
         }
