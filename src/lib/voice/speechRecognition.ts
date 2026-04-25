@@ -195,3 +195,64 @@ export function arePhrasesSimilar(expected: string, spoken: string, threshold = 
   const similarity = 1 - distance / maxLength
   return similarity >= threshold
 }
+
+function normalizeWords(text: string): string[] {
+  const normalized = normalizePhrase(text)
+  return normalized ? normalized.split(' ').filter(Boolean) : []
+}
+
+function isWordMatch(expectedWord: string, spokenWord: string): boolean {
+  if (!expectedWord || !spokenWord) {
+    return false
+  }
+
+  if (expectedWord === spokenWord) {
+    return true
+  }
+
+  const minLength = Math.max(3, Math.min(expectedWord.length, spokenWord.length))
+
+  if (
+    spokenWord.length >= minLength &&
+    expectedWord.startsWith(spokenWord)
+  ) {
+    return true
+  }
+
+  if (
+    expectedWord.length >= minLength &&
+    spokenWord.startsWith(expectedWord)
+  ) {
+    return true
+  }
+
+  const distance = levenshteinDistance(expectedWord, spokenWord)
+  const maxLength = Math.max(expectedWord.length, spokenWord.length)
+
+  if (maxLength === 0) {
+    return false
+  }
+
+  const similarity = 1 - distance / maxLength
+  return similarity >= 0.64
+}
+
+export function matchPhraseWords(expected: string, spoken: string): boolean[] {
+  const expectedWords = normalizeWords(expected)
+  const spokenWords = normalizeWords(spoken)
+  const matched = expectedWords.map(() => false)
+
+  let spokenIndex = 0
+
+  for (let i = 0; i < expectedWords.length; i += 1) {
+    for (let j = spokenIndex; j < spokenWords.length; j += 1) {
+      if (isWordMatch(expectedWords[i], spokenWords[j])) {
+        matched[i] = true
+        spokenIndex = j + 1
+        break
+      }
+    }
+  }
+
+  return matched
+}

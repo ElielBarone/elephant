@@ -8,6 +8,7 @@ import IconButton from '@mui/material/IconButton'
 import LinearProgress from '@mui/material/LinearProgress'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
+import { keyframes } from '@mui/system'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FlagsRelated } from '@/components/FlagsRelated'
@@ -23,7 +24,7 @@ import {
 import { idiomLabel } from '@/lib/idiom'
 import { applyRating, sortDueFirst } from '@/lib/scheduler/scheduler'
 import { speakWithIdiom } from '@/lib/tts/speak'
-import { createSpeechRecognizer, arePhrasesSimilar } from '@/lib/voice/speechRecognition'
+import { createSpeechRecognizer, matchPhraseWords } from '@/lib/voice/speechRecognition'
 import { getRatingFromTranscript } from '@/lib/voice/ratingCommands'
 import type { CardSchedule, Deck, Phrase, Rating } from '@/types/models'
 
@@ -38,6 +39,11 @@ const speechLanguageByIdiom: Record<string, string> = {
   enGB: 'en-GB',
   itIT: 'it-IT',
 }
+
+const blinkAnimation = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+`
 
 function buildRows(deck: Deck, schedules: CardSchedule[], now: number): StudyRow[] {
   const map = new Map(schedules.map((row) => [row.cardId, row]))
@@ -67,7 +73,9 @@ export function StudyPage() {
   const [listening, setListening] = useState(false)
   const [speechTranscript, setSpeechTranscript] = useState('')
   const [speechError, setSpeechError] = useState<string | null>(null)
+  const [matchedPromptWords, setMatchedPromptWords] = useState<boolean[]>([])
   const speechRecognizerRef = useRef<ReturnType<typeof createSpeechRecognizer> | null>(null)
+  const flipTimeoutRef = useRef<number | null>(null)
   const completionSplashVisible = useRef(false)
 
   const refresh = useCallback(async () => {
@@ -149,6 +157,47 @@ export function StudyPage() {
   const safeIndex = Math.min(activeIndex, Math.max(0, rows.length - 1))
   const active = rows[safeIndex]
 
+  const promptWithMatches = useMemo(() => {
+    if (!active) {
+      return ''
+    }
+
+    const tokens = active.phrase.original.split(/(\s+)/)
+    let wordIndex = 0
+
+    return tokens.map((token, index) => {
+      if (token === '') {
+        return null
+      }
+
+      if (/\s+/.test(token)) {
+        return <span key={index}>{token}</span>
+      }
+
+      const matched = matchedPromptWords[wordIndex]
+      wordIndex += 1
+
+      return (
+        <Box
+          key={index}
+          component="span"
+          sx={{            
+            color: matched ? 'primary.main' : 'inherit',
+            fontWeight: matched ? 600 : 'inherit',
+          }}
+        >
+          {token}
+        </Box>
+      )
+    })
+  }, [active, matchedPromptWords])
+
+  useEffect(() => {
+    setMatchedPromptWords([])
+    setSpeechTranscript('')
+    setSpeechError(null)
+  }, [active?.phrase.id, flipped])
+
   const progress = useMemo(() => {
     if (sessionTarget === 0) {
       return 0
@@ -203,6 +252,8 @@ export function StudyPage() {
     setSpeechError(null)
     setSpeechTranscript('')
 
+    let hasRecognitionError = false
+
     const recognizer = createSpeechRecognizer({
       lang: language,
       continuous: true,
@@ -219,14 +270,29 @@ export function StudyPage() {
           return
         }
         setSpeechTranscript(transcript)
-        if (arePhrasesSimilar(active.phrase.original, transcript)) {
-          setFlipped(true)
+        const matches = matchPhraseWords(active.phrase.original, transcript)
+        setMatchedPromptWords(matches)
+
+        if (matches.every(Boolean)) {
+          if (flipTimeoutRef.current !== null) {
+            window.clearTimeout(flipTimeoutRef.current)
+          }
+          flipTimeoutRef.current = window.setTimeout(() => {
+            if (!isCurrent) {
+              return
+            }
+            setFlipped(true)
+            flipTimeoutRef.current = null
+          }, 1200)
         }
       },
       onError: (message) => {
         if (!isCurrent) {
           return
         }
+        hasRecognitionError = true
+        setListening(false)
+        setSpeechTranscript('')
         setSpeechError(message)
       },
       onEnd: () => {
@@ -234,6 +300,21 @@ export function StudyPage() {
           return
         }
         setListening(false)
+
+        if (flipped || hasRecognitionError) {
+          return
+        }
+
+        window.setTimeout(() => {
+          if (!isCurrent) {
+            return
+          }
+          try {
+            recognizer.start()
+          } catch (error) {
+            setSpeechError(error instanceof Error ? error.message : String(error))
+          }
+        }, 250)
       },
     })
 
@@ -253,11 +334,15 @@ export function StudyPage() {
 
     return () => {
       isCurrent = false
+      if (flipTimeoutRef.current !== null) {
+        window.clearTimeout(flipTimeoutRef.current)
+        flipTimeoutRef.current = null
+      }
       recognizer.stop()
       speechRecognizerRef.current = null
       setListening(false)
     }
-  }, [active?.phrase.id, active?.phrase.original, deck?.learningIdiom, flipped])
+  }, [active, deck, flipped])
 
   const handleRate = useCallback(async (rating: Rating) => {
     if (!active) {
@@ -270,6 +355,23 @@ export function StudyPage() {
     await refresh()
     setActiveIndex(0)
   }, [active, refresh])
+
+  const handleRetrySpeechRecognition = useCallback(() => {
+    setSpeechError(null)
+    setSpeechTranscript('')
+
+    const recognizer = speechRecognizerRef.current
+    if (!recognizer) {
+      setSpeechError('Speech recognition is unavailable. Please try again later.')
+      return
+    }
+
+    try {
+      recognizer.start()
+    } catch (error) {
+      setSpeechError(error instanceof Error ? error.message : String(error))
+    }
+  }, [])
 
   useEffect(() => {
     if (!active || !deck || !flipped) {
@@ -288,12 +390,13 @@ export function StudyPage() {
         if (!isCurrent) {
           return
         }
-        // Rating listening started
+        setSpeechTranscript('')
       },
       onResult: (transcript) => {
         if (!isCurrent) {
           return
         }
+        setSpeechTranscript(transcript)
         const rating = getRatingFromTranscript(transcript)
         if (rating) {
           void handleRate(rating)
@@ -303,14 +406,27 @@ export function StudyPage() {
         // Rating recognition error - silently ignore
       },
       onEnd: () => {
-        // Rating listening ended
+        if (!isCurrent) {
+          return
+        }
+
+        window.setTimeout(() => {
+          if (!isCurrent) {
+            return
+          }
+          try {
+            ratingRecognizer.start()
+          } catch {
+            // Silently handle rating recognition start errors
+          }
+        }, 250)
       },
     })
 
     if (ratingRecognizer.isSupported) {
       try {
         ratingRecognizer.start()
-      } catch (error) {
+      } catch {
         // Silently handle rating recognition start errors
       }
     }
@@ -319,7 +435,7 @@ export function StudyPage() {
       isCurrent = false
       ratingRecognizer.stop()
     }
-  }, [active?.phrase.id, deck?.nativeIdiom, flipped, handleRate])
+  }, [active, deck, flipped, handleRate])
 
   if (!deckId) {
     return <Alert severity="error">Missing deck</Alert>
@@ -360,6 +476,18 @@ export function StudyPage() {
   const hasDue = rows.some((row) => row.schedule.due <= Date.now())
 
   const speakButtonDisabled = flipped ? !answerTtsOn : !promptTtsOn
+
+  const statusText = speechError
+    ? speechError
+    : speechSupported === false
+    ? 'Speech recognition not available. Tap to flip manually.'
+    : listening
+    ? 'Listening for your pronunciation…'
+    : flipped
+    ? speechTranscript
+      ? `Your answer: ${speechTranscript}`
+      : 'Say "hard", "good", or "easy" to rate the card.'
+    : 'Speak the prompt aloud to flip the card.'
 
   return (
     <Stack spacing={2.5} sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', minHeight: 0 }}>
@@ -423,27 +551,34 @@ export function StudyPage() {
         <FlipCard
           frontTitle="Prompt"
           backTitle="Translation"
-          frontText={active.phrase.original}
+          frontText={promptWithMatches}
           backText={active.phrase.translated}
           flipped={flipped}
           onToggle={() => setFlipped((value) => !value)}
         />
-        <Typography
-          variant="caption"
-          color={speechError ? 'error.main' : 'text.secondary'}
-          sx={{ mt: 1 }}
-        >
-          {speechError
-            ? speechError
-            : speechSupported === false
-            ? 'Speech recognition not available. Tap to flip manually.'
-            : listening
-            ? 'Listening for your pronunciation…'
-            : flipped
-            ? 'Say "hard", "good", or "easy" to rate the card.'
-            : 'Speak the prompt aloud to flip the card.'}
-        </Typography>
-        {speechTranscript ? (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
+          {listening ? (
+            <Box
+              component="span"
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                animation: `${blinkAnimation} 1.4s ease-in-out infinite`,
+              }}
+            />
+          ) : null}
+          <Typography variant="caption" color={speechError ? 'error.main' : 'text.secondary'}>
+            {statusText}
+          </Typography>
+          {speechError && speechSupported !== false && !flipped ? (
+            <Button size="small" variant="outlined" onClick={handleRetrySpeechRecognition} sx={{ ml: 'auto' }}>
+              Retry
+            </Button>
+          ) : null}
+        </Box>
+        {speechTranscript && !flipped ? (
           <Typography variant="caption" color="text.secondary">
             Heard: {speechTranscript}
           </Typography>

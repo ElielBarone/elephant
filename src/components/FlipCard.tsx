@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
@@ -5,7 +6,7 @@ import Typography from '@mui/material/Typography'
 export interface FlipCardProps {
   frontTitle: string
   backTitle: string
-  frontText: string
+  frontText: ReactNode
   backText: string
   flipped: boolean
   onToggle: () => void
