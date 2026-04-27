@@ -25,7 +25,7 @@ import { idiomLabel } from '@/lib/idiom'
 import { applyRating, sortDueFirst } from '@/lib/scheduler/scheduler'
 import { speakWithIdiom } from '@/lib/tts/speak'
 import { createSpeechRecognizer, matchPhraseWords } from '@/lib/voice/speechRecognition'
-import type { CardSchedule, Deck, Phrase, Rating } from '@/types/models'
+import type { CardSchedule, Deck, Idiom, Phrase, Rating } from '@/types/models'
 import MicIcon from '@mui/icons-material/Mic';
 
 interface StudyRow {
@@ -71,6 +71,7 @@ export function StudyPage() {
   const [sessionTarget, setSessionTarget] = useState(0)
   const [speechSupported, setSpeechSupported] = useState<boolean | null>(null)
   const [listening, setListening] = useState(false)
+  const [ttsPlaying, setTtsPlaying] = useState(false)
   const [speechTranscript, setSpeechTranscript] = useState('')
   const [speechError, setSpeechError] = useState<string | null>(null)
   const [matchedPromptWords, setMatchedPromptWords] = useState<boolean[]>([])
@@ -208,6 +209,22 @@ export function StudyPage() {
   const promptTtsOn = deck?.ttsPromptEnabled !== false
   const answerTtsOn = deck?.ttsAnswerEnabled !== false
 
+  const playText = useCallback(async (text: string, idiom: Idiom) => {
+    const recognizer = speechRecognizerRef.current
+    if (recognizer) {
+      recognizer.stop()
+    }
+
+    setTtsPlaying(true)
+    try {
+      await speakWithIdiom(text, idiom)
+    } catch {
+      // Ignore speech synthesis failures; the UI will recover.
+    } finally {
+      setTtsPlaying(false)
+    }
+  }, [])
+
   const speakVisibleSide = useCallback(() => {
     if (!deck || !active) {
       return
@@ -216,33 +233,35 @@ export function StudyPage() {
       if (deck.ttsAnswerEnabled === false) {
         return
       }
-      speakWithIdiom(active.phrase.translated, deck.nativeIdiom)
+      void playText(active.phrase.translated, deck.nativeIdiom)
     } else {
       if (deck.ttsPromptEnabled === false) {
         return
       }
-      speakWithIdiom(active.phrase.original, deck.learningIdiom)
+      void playText(active.phrase.original, deck.learningIdiom)
     }
-  }, [active, deck, flipped])
+  }, [active, deck, flipped, playText])
 
   useEffect(() => {
     if (!active || !deck || deck.ttsPromptEnabled === false) {
       return
     }
-    speakWithIdiom(active.phrase.original, deck.learningIdiom)
+
+    void playText(active.phrase.original, deck.learningIdiom)
   // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card id or prompt TTS flag changes
-  }, [active?.phrase.id, deck?.id, deck?.ttsPromptEnabled])
+  }, [active?.phrase.id, deck?.id, deck?.ttsPromptEnabled, playText])
 
   useEffect(() => {
     if (!active || !deck || !flipped || deck.ttsAnswerEnabled === false) {
       return
     }
-    speakWithIdiom(active.phrase.translated, deck.nativeIdiom)
+
+    void playText(active.phrase.translated, deck.nativeIdiom)
   // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card, flip, or answer TTS flag changes
-  }, [active?.phrase.id, flipped, deck?.id, deck?.ttsAnswerEnabled])
+  }, [active?.phrase.id, flipped, deck?.id, deck?.ttsAnswerEnabled, playText])
 
   useEffect(() => {
-    if (!active || !deck || flipped) {
+    if (!active || !deck || flipped || ttsPlaying) {
       return
     }
 
@@ -342,7 +361,7 @@ export function StudyPage() {
       speechRecognizerRef.current = null
       setListening(false)
     }
-  }, [active, deck, flipped])
+  }, [active, deck, flipped, ttsPlaying])
 
   const handleRate = useCallback(async (rating: Rating) => {
     if (!active) {
@@ -417,6 +436,8 @@ export function StudyPage() {
     ? speechError
     : speechSupported === false
     ? 'Speech recognition not available. Tap to flip manually.'
+    : ttsPlaying
+    ? 'Reproducing audio…'
     : listening
     ? 'Listening for your pronunciation…'
     : flipped
