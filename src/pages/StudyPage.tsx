@@ -25,8 +25,8 @@ import { idiomLabel } from '@/lib/idiom'
 import { applyRating, sortDueFirst } from '@/lib/scheduler/scheduler'
 import { speakWithIdiom } from '@/lib/tts/speak'
 import { createSpeechRecognizer, matchPhraseWords } from '@/lib/voice/speechRecognition'
-import { getRatingFromTranscript } from '@/lib/voice/ratingCommands'
 import type { CardSchedule, Deck, Phrase, Rating } from '@/types/models'
+import MicIcon from '@mui/icons-material/Mic';
 
 interface StudyRow {
   phrase: Phrase
@@ -373,70 +373,6 @@ export function StudyPage() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!active || !deck || !flipped) {
-      return
-    }
-
-    const language = 'en-US' // Use English for rating recognition since most commands are English-based
-    let isCurrent = true
-
-    const ratingRecognizer = createSpeechRecognizer({
-      lang: language,
-      continuous: true,
-      interimResults: false,
-      maxAlternatives: 1,
-      onStart: () => {
-        if (!isCurrent) {
-          return
-        }
-        setSpeechTranscript('')
-      },
-      onResult: (transcript) => {
-        if (!isCurrent) {
-          return
-        }
-        setSpeechTranscript(transcript)
-        const rating = getRatingFromTranscript(transcript)
-        if (rating) {
-          void handleRate(rating)
-        }
-      },
-      onError: () => {
-        // Rating recognition error - silently ignore
-      },
-      onEnd: () => {
-        if (!isCurrent) {
-          return
-        }
-
-        window.setTimeout(() => {
-          if (!isCurrent) {
-            return
-          }
-          try {
-            ratingRecognizer.start()
-          } catch {
-            // Silently handle rating recognition start errors
-          }
-        }, 250)
-      },
-    })
-
-    if (ratingRecognizer.isSupported) {
-      try {
-        ratingRecognizer.start()
-      } catch {
-        // Silently handle rating recognition start errors
-      }
-    }
-
-    return () => {
-      isCurrent = false
-      ratingRecognizer.stop()
-    }
-  }, [active, deck, flipped, handleRate])
-
   if (!deckId) {
     return <Alert severity="error">Missing deck</Alert>
   }
@@ -484,9 +420,7 @@ export function StudyPage() {
     : listening
     ? 'Listening for your pronunciation…'
     : flipped
-    ? speechTranscript
-      ? `Your answer: ${speechTranscript}`
-      : 'Say "hard", "good", or "easy" to rate the card.'
+    ? speechTranscript      
     : 'Speak the prompt aloud to flip the card.'
 
   return (
@@ -557,6 +491,11 @@ export function StudyPage() {
           onToggle={() => setFlipped((value) => !value)}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
+          {speechError && speechSupported !== false && !flipped ? (
+            <IconButton size="small"  onClick={handleRetrySpeechRecognition} >
+              <MicIcon />
+            </IconButton>
+          ) : null}
           {listening ? (
             <Box
               component="span"
@@ -572,11 +511,7 @@ export function StudyPage() {
           <Typography variant="caption" color={speechError ? 'error.main' : 'text.secondary'}>
             {statusText}
           </Typography>
-          {speechError && speechSupported !== false && !flipped ? (
-            <Button size="small" variant="outlined" onClick={handleRetrySpeechRecognition} sx={{ ml: 'auto' }}>
-              Retry
-            </Button>
-          ) : null}
+          
         </Box>
         {speechTranscript && !flipped ? (
           <Typography variant="caption" color="text.secondary">

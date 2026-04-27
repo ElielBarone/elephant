@@ -4,16 +4,16 @@
   "learningIdiom": "itIT",
   "phrases": [
     {
-      "original": "Ciao",
-      "translated": "Hello / Bye"
+      "original": "Ciao, a dopo!",
+      "translated": "Bye, see you later!"
     },
     {
-      "original": "Buongiorno",
-      "translated": "Good morning"
+      "original": "Buongiorno! Come stai?",
+      "translated": "Good morning! How are you?"
     },
     {
-      "original": "Buonasera",
-      "translated": "Good evening"
+      "original": "Buonasera, ti va un caffè?",
+      "translated": "Good evening, want a coffee?"
     },
     {
       "original": "A dopo",
@@ -24,16 +24,16 @@
       "translated": "See you soon"
     },
     {
-      "original": "Per favore",
-      "translated": "Please"
+      "original": "Un caffè, per favore.",
+      "translated": "One coffee, please."
     },
     {
-      "original": "Per piacere",
-      "translated": "Please (casual)"
+      "original": "Aspetta un attimo, per piacere!",
+      "translated": "Wait a moment, please!"
     },
     {
-      "original": "Grazie",
-      "translated": "Thank you"
+      "original": "Grazie mille per tutto!",
+      "translated": "Thank you so much for everything!"
     },
     {
       "original": "Grazie mille",
@@ -45,19 +45,19 @@
     },
     {
       "original": "Non capisco",
-      "translated": "I don’t understand"
+      "translated": "I don't understand"
     },
     {
-      "original": "Capito",
-      "translated": "Got it"
+      "original": "Perfetto, capito!",
+      "translated": "Perfect, got it!"
     },
     {
       "original": "Ripeti, per favore",
       "translated": "Repeat, please"
     },
     {
-      "original": "Parla piano",
-      "translated": "Speak slowly"
+      "original": "Puoi parlare piano, per favore?",
+      "translated": "Can you speak slowly, please?"
     },
     {
       "original": "Come si dice?",
@@ -80,92 +80,92 @@
       "translated": "How much is it?"
     },
     {
-      "original": "Va bene",
-      "translated": "Okay"
+      "original": "Va bene, allora ci vediamo domani.",
+      "translated": "Okay, so we'll see each other tomorrow."
     },
     {
       "original": "Non va",
-      "translated": "It doesn’t work"
+      "translated": "It doesn't work"
     },
     {
-      "original": "Ho fame",
-      "translated": "I’m hungry"
+      "original": "Ho fame, andiamo a mangiare?",
+      "translated": "I'm hungry, shall we go eat?"
     },
     {
-      "original": "Ho sete",
-      "translated": "I’m thirsty"
+      "original": "Ho sete, mi prendi un'acqua?",
+      "translated": "I'm thirsty, get me some water?"
     },
     {
-      "original": "Il conto",
-      "translated": "The bill"
+      "original": "Il conto, per favore!",
+      "translated": "The bill, please!"
     },
     {
-      "original": "Dov’è?",
+      "original": "Dov'è?",
       "translated": "Where is it?"
     },
     {
-      "original": "Qui vicino",
-      "translated": "Nearby"
+      "original": "C'è una stazione qui vicino?",
+      "translated": "Is there a station nearby?"
     },
     {
-      "original": "A sinistra",
-      "translated": "Left"
+      "original": "Gira a sinistra alla prossima piazza.",
+      "translated": "Turn left at the next square."
     },
     {
-      "original": "A destra",
-      "translated": "Right"
+      "original": "Puoi andare a destra?",
+      "translated": "Can you go right?"
     },
     {
-      "original": "Sempre dritto",
-      "translated": "Straight ahead"
+      "original": "Continua sempre dritto, non c'è sbaglio.",
+      "translated": "Keep going straight ahead, you can't miss it."
     },
     {
-      "original": "Un caffè",
-      "translated": "One coffee"
+      "original": "Mi porti un caffè, per favore?",
+      "translated": "Can you bring me one coffee, please?"
     },
     {
-      "original": "Un’acqua",
-      "translated": "One water"
+      "original": "Un'acqua, grazie!",
+      "translated": "One water, thanks!"
     },
     {
-      "original": "Ancora uno",
-      "translated": "One more"
+      "original": "Ancora uno, il solito!",
+      "translated": "One more, the usual!"
     },
     {
-      "original": "Basta così",
-      "translated": "That’s enough"
+      "original": "Basta così, non ne posso più.",
+      "translated": "That's enough, I can't take it anymore."
     },
     {
       "original": "Tutto buono",
       "translated": "Everything is good"
     },
     {
-      "original": "Tutto bene?",
-      "translated": "All good?"
+      "original": "Tutto bene? Vi serve altro?",
+      "translated": "All good? Do you need anything else?"
     },
     {
-      "original": "Magari",
-      "translated": "Maybe / I wish"
+      "original": "Magari vincessi la lotteria!",
+      "translated": "I wish I'd win the lottery!"
     },
     {
-      "original": "Dai",
-      "translated": "Come on"
+      "original": "Dai, facciamo una partita a calcio!",
+      "translated": "Come on, let's play a game of football!"
     },
     {
-      "original": "Che bello",
-      "translated": "Nice!"
+      "original": "Che bello questo vestito!",
+      "translated": "Nice dress!"
     },
     {
-      "original": "Figurati",
-      "translated": "No worries"
+      "original": "Figurati, è stato un piacere!",
+      "translated": "No worries, it was a pleasure!"
     },
     {
-      "original": "Biglietto",
-      "translated": "Ticket"
+      "original": "Mi serve un biglietto per Napoli.",
+      "translated": "I need a ticket to Naples."
     },
     {
-      "original": "Solo andata",
-      "translated": "One way"
+      "original": "Solo andata o andata e ritorno?",
+      "translated": "One way or round trip?"
     },
     {
       "original": "Andata e ritorno",
@@ -177,35 +177,35 @@
     },
     {
       "original": "È in ritardo",
-      "translated": "It’s late"
+      "translated": "It's late"
     },
     {
-      "original": "Subito",
-      "translated": "Immediately"
+      "original": "Vengo subito, aspetta un momento!",
+      "translated": "I'm coming immediately, wait a moment!"
     },
     {
-      "original": "Tra poco",
-      "translated": "Soon"
+      "original": "Arriva tra poco il treno.",
+      "translated": "The train arrives soon."
     },
     {
-      "original": "Stasera",
-      "translated": "Tonight"
+      "original": "Facciamo cena stasera?",
+      "translated": "Shall we have dinner tonight?"
     },
     {
-      "original": "Domani",
-      "translated": "Tomorrow"
+      "original": "Domani è festa, non lavoro.",
+      "translated": "Tomorrow is a holiday, I'm not working."
     },
     {
-      "original": "Ci vediamo",
-      "translated": "See you"
+      "original": "Ci vediamo domani mattina!",
+      "translated": "See you tomorrow morning!"
     },
     {
-      "original": "Sto lavorando",
-      "translated": "I’m working"
+      "original": "Sto lavorando fino alle sei.",
+      "translated": "I'm working until six."
     },
     {
-      "original": "Ho finito",
-      "translated": "I finished"
+      "original": "Ho finito i compiti, posso giocare?",
+      "translated": "I finished homework, can I play?"
     },
     {
       "original": "Devo fare",
@@ -213,43 +213,43 @@
     },
     {
       "original": "Facciamo così",
-      "translated": "Let’s do this"
+      "translated": "Let's do this"
     },
     {
       "original": "Ci penso",
-      "translated": "I’ll think about it"
+      "translated": "I'll think about it"
     },
     {
-      "original": "Pago io",
-      "translated": "I pay"
+      "original": "No, pago io, è bene così.",
+      "translated": "No, I pay, it's fine like this."
     },
     {
-      "original": "Dividiamo",
-      "translated": "Let’s split"
+      "original": "Dividiamo il conto a metà?",
+      "translated": "Let's split the bill in half?"
     },
     {
-      "original": "Troppo caro",
-      "translated": "Too expensive"
+      "original": "Questo è troppo caro per me.",
+      "translated": "This is too expensive for me."
     },
     {
       "original": "Quanto pago?",
       "translated": "How much do I pay?"
     },
     {
-      "original": "Aiuto",
-      "translated": "Help"
+      "original": "Aiuto! Qualcuno mi aiuti!",
+      "translated": "Help! Someone help me!"
     },
     {
-      "original": "È urgente",
-      "translated": "It’s urgent"
+      "original": "È urgente, non posso aspettare.",
+      "translated": "It's urgent, I can't wait."
     },
     {
       "original": "Sto male",
       "translated": "I feel sick"
     },
     {
-      "original": "Chiama aiuto",
-      "translated": "Call help"
+      "original": "Chiama aiuto subito, per favore!",
+      "translated": "Call help immediately, please!"
     },
     {
       "original": "È aperto?",
@@ -257,43 +257,43 @@
     },
     {
       "original": "È chiuso",
-      "translated": "It’s closed"
+      "translated": "It's closed"
     },
     {
-      "original": "Serve altro?",
-      "translated": "Anything else?"
+      "original": "Serve altro o va tutto bene?",
+      "translated": "Anything else or is everything okay?"
     },
     {
       "original": "Mi fa male",
       "translated": "It hurts"
     },
     {
-      "original": "Ho bisogno",
-      "translated": "I need"
+      "original": "Ho bisogno di aiuto con questo.",
+      "translated": "I need help with this."
     },
     {
-      "original": "Troppo stanco",
-      "translated": "Very tired"
+      "original": "Sono troppo stanco, devo riposare.",
+      "translated": "I'm very tired, I need to rest."
     },
     {
-      "original": "Uè",
-      "translated": "Hey!"
+      "original": "Uè, ascoltami un momento!",
+      "translated": "Hey, listen to me for a moment!"
     },
     {
-      "original": "Oh",
-      "translated": "Hey"
+      "original": "Oh, non ti avevo visto!",
+      "translated": "Hey, I hadn't seen you!"
     },
     {
-      "original": "Ma dai",
-      "translated": "Come on!"
+      "original": "Ma dai, non è possibile!",
+      "translated": "Come on, that's not possible!"
     },
     {
-      "original": "Ci sta",
-      "translated": "Makes sense"
+      "original": "Logico, ci sta tutto.",
+      "translated": "Logical, it all makes sense."
     },
     {
-      "original": "Dai su",
-      "translated": "Let’s go"
+      "original": "Dai su, andiamo!",
+      "translated": "Let's go, come on!"
     }
   ]
 }
