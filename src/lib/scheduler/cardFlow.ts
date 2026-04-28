@@ -1,13 +1,15 @@
 import type { Deck } from '@/types/models'
 
-export enum CardPhase {
-  ShowFront = 'showFront',
-  PlayFrontTts = 'playFrontTts',
-  ListenFront = 'listenFront',
-  ShowBack = 'showBack',
-  PlayBackTts = 'playBackTts',
-  AwaitRating = 'awaitRating',
-}
+export const CardPhase = {
+  ShowFront: 'showFront',
+  PlayFrontTts: 'playFrontTts',
+  ListenFront: 'listenFront',
+  ShowBack: 'showBack',
+  PlayBackTts: 'playBackTts',
+  AwaitRating: 'awaitRating',
+} as const
+
+export type CardPhase = typeof CardPhase[keyof typeof CardPhase]
 
 export interface CardFlowConfig {
   front: CardPhase[]
