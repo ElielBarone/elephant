@@ -29,6 +29,7 @@ import { createSpeechRecognizer, matchPhraseWords } from '@/lib/voice/speechReco
 import type { CardSchedule, Deck, Idiom, Phrase, Rating } from '@/types/models'
 import MicIcon from '@mui/icons-material/Mic';
 import { getCardStatus } from '@/hooks/useCardStatus'
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 interface StudyRow {
   phrase: Phrase
@@ -161,6 +162,29 @@ export function StudyPage() {
 
   const safeIndex = Math.min(activeIndex, Math.max(0, rows.length - 1))
   const active = rows[safeIndex]
+
+  const explainButton = useMemo(() => {
+    if (!active || !deck) return null
+
+    const prompt = `Explain '${active.phrase.original}' (${active.phrase.translated} in ${deck.learningIdiom}). Give 2 examples in different contexts. Respond in ${deck.nativeIdiom}.`
+    const encodedPrompt = encodeURIComponent(prompt)
+    const url = `https://chat.openai.com/?model=gpt-4&q=${encodedPrompt}`
+
+    return (
+      <Button
+      startIcon={<AutoAwesomeIcon />}
+        variant="outlined"
+        color="secondary"
+        component="a"
+        href={url}
+        target="_blank"
+        sx={{ mt: 4, textTransform: 'none' }}
+        rel="noopener noreferrer"        
+      >
+        Explain with AI
+      </Button>
+    )
+  }, [active, deck])
 
   const promptWithMatches = useMemo(() => {
     if (!active) {
@@ -561,6 +585,7 @@ export function StudyPage() {
           backTitle="Translation"
           frontText={promptWithMatches}
           backText={active.phrase.translated}
+          backExtra={explainButton}
           flipped={flipped}
           onToggle={() => {
             setFlipped((value) => !value)

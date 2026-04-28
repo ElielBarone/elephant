@@ -8,6 +8,7 @@ export interface FlipCardProps {
   backTitle: string
   frontText: ReactNode
   backText: string
+  backExtra?: ReactNode
   flipped: boolean
   onToggle: () => void
 }
@@ -17,6 +18,7 @@ export function FlipCard({
   backTitle,
   frontText,
   backText,
+  backExtra,
   flipped,
   onToggle,
 }: FlipCardProps) {
@@ -103,6 +105,7 @@ export function FlipCard({
           <Typography variant="h5" sx={{ mt: 1, wordBreak: 'break-word', textAlign: 'center' }}>
             {backText}
           </Typography>
+          {backExtra}
           <Typography variant="caption" sx={{ mt: 2, color: 'rgba(255,255,255,0.72)' }}>
             Tap to show prompt
           </Typography>
