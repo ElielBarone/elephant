@@ -23,6 +23,7 @@ import {
 } from '@/lib/db/deckStorage'
 import { idiomLabel } from '@/lib/idiom'
 import { applyRating, sortDueFirst } from '@/lib/scheduler/scheduler'
+import { buildCardFlowConfig, CardPhase } from '@/lib/scheduler/cardFlow'
 import { speakWithIdiom } from '@/lib/tts/speak'
 import { createSpeechRecognizer, matchPhraseWords } from '@/lib/voice/speechRecognition'
 import type { CardSchedule, Deck, Idiom, Phrase, Rating } from '@/types/models'
@@ -72,6 +73,7 @@ export function StudyPage() {
   const [speechSupported, setSpeechSupported] = useState<boolean | null>(null)
   const [listening, setListening] = useState(false)
   const [ttsPlaying, setTtsPlaying] = useState(false)
+  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0)
   const [speechTranscript, setSpeechTranscript] = useState('')
   const [speechError, setSpeechError] = useState<string | null>(null)
   const [matchedPromptWords, setMatchedPromptWords] = useState<boolean[]>([])
@@ -123,6 +125,7 @@ export function StudyPage() {
 
     const startAgain = () => {
       setFlipped(false)
+      setCurrentPhaseIndex(0)
       setActiveIndex(0)
       setSessionRated(0)
       setSessionTarget(rows.length)
@@ -199,6 +202,11 @@ export function StudyPage() {
     setSpeechError(null)
   }, [active?.phrase.id, flipped])
 
+  useEffect(() => {
+    setCurrentPhaseIndex(0)
+    setFlipped(false)
+  }, [active?.phrase.id, deck?.id])
+
   const progress = useMemo(() => {
     if (sessionTarget === 0) {
       return 0
@@ -208,6 +216,15 @@ export function StudyPage() {
 
   const promptTtsOn = deck?.ttsPromptEnabled !== false
   const answerTtsOn = deck?.ttsAnswerEnabled !== false
+
+  const flowConfig = useMemo(() => (deck ? buildCardFlowConfig(deck) : null), [deck])
+  const currentPhases = useMemo(() => {
+    if (!flowConfig) {
+      return []
+    }
+    return flipped ? flowConfig.back : flowConfig.front
+  }, [flowConfig, flipped])
+  const currentPhase = currentPhases[currentPhaseIndex] ?? CardPhase.ShowFront
 
   const playText = useCallback(async (text: string, idiom: Idiom) => {
     const recognizer = speechRecognizerRef.current
@@ -243,125 +260,186 @@ export function StudyPage() {
   }, [active, deck, flipped, playText])
 
   useEffect(() => {
-    if (!active || !deck || deck.ttsPromptEnabled === false) {
+    if (!active || !deck || !flowConfig) {
       return
     }
 
-    void playText(active.phrase.original, deck.learningIdiom)
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card id or prompt TTS flag changes
-  }, [active?.phrase.id, deck?.id, deck?.ttsPromptEnabled, playText])
-
-  useEffect(() => {
-    if (!active || !deck || !flipped || deck.ttsAnswerEnabled === false) {
-      return
-    }
-
-    void playText(active.phrase.translated, deck.nativeIdiom)
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- only when card, flip, or answer TTS flag changes
-  }, [active?.phrase.id, flipped, deck?.id, deck?.ttsAnswerEnabled, playText])
-
-  useEffect(() => {
-    if (!active || !deck || flipped || ttsPlaying) {
-      return
-    }
-
-    const language = speechLanguageByIdiom[deck.learningIdiom] ?? 'en-US'
     let isCurrent = true
+    const nextPhase = currentPhases[currentPhaseIndex + 1]
 
-    setSpeechError(null)
-    setSpeechTranscript('')
+    const goToNextPhase = () => {
+      if (!isCurrent) {
+        return
+      }
+      setCurrentPhaseIndex((index) => Math.min(index + 1, currentPhases.length - 1))
+    }
 
-    let hasRecognitionError = false
+    const shouldAdvanceAfterShow = (phase: CardPhase): boolean => {
+      if (phase === CardPhase.ShowFront) {
+        return nextPhase !== undefined && nextPhase !== CardPhase.AwaitRating
+      }
+      if (phase === CardPhase.ShowBack) {
+        return nextPhase === CardPhase.PlayBackTts
+      }
+      return false
+    }
 
-    const recognizer = createSpeechRecognizer({
-      lang: language,
-      continuous: true,
-      interimResults: false,
-      maxAlternatives: 1,
-      onStart: () => {
+    if (currentPhase === CardPhase.ShowFront || currentPhase === CardPhase.ShowBack) {
+      if (shouldAdvanceAfterShow(currentPhase)) {
+        goToNextPhase()
+      }
+      return () => {
+        isCurrent = false
+      }
+    }
+
+    if (currentPhase === CardPhase.PlayFrontTts) {
+      setSpeechError(null)
+      void (async () => {
+        await playText(active.phrase.original, deck.learningIdiom)
         if (!isCurrent) {
           return
         }
-        setListening(true)
-      },
-      onResult: (transcript) => {
+        goToNextPhase()
+      })()
+      return () => {
+        isCurrent = false
+      }
+    }
+
+    if (currentPhase === CardPhase.PlayBackTts) {
+      setSpeechError(null)
+      void (async () => {
+        await playText(active.phrase.translated, deck.nativeIdiom)
         if (!isCurrent) {
           return
         }
-        setSpeechTranscript(transcript)
-        const matches = matchPhraseWords(active.phrase.original, transcript)
-        setMatchedPromptWords(matches)
+        goToNextPhase()
+      })()
+      return () => {
+        isCurrent = false
+      }
+    }
 
-        if (matches.every(Boolean)) {
-          if (flipTimeoutRef.current !== null) {
-            window.clearTimeout(flipTimeoutRef.current)
-          }
-          flipTimeoutRef.current = window.setTimeout(() => {
-            if (!isCurrent) {
-              return
-            }
-            setFlipped(true)
-            flipTimeoutRef.current = null
-          }, 1200)
-        }
-      },
-      onError: (message) => {
-        if (!isCurrent) {
-          return
-        }
-        hasRecognitionError = true
-        setListening(false)
-        setSpeechTranscript('')
-        setSpeechError(message)
-      },
-      onEnd: () => {
-        if (!isCurrent) {
-          return
-        }
-        setListening(false)
+    if (currentPhase === CardPhase.ListenFront) {
+      const language = speechLanguageByIdiom[deck.learningIdiom] ?? 'en-US'
+      setSpeechError(null)
+      setSpeechTranscript('')
+      setMatchedPromptWords([])
+      setListening(false)
 
-        if (flipped || hasRecognitionError) {
-          return
-        }
-
-        window.setTimeout(() => {
+      let hasRecognitionError = false
+      const recognizer = createSpeechRecognizer({
+        lang: language,
+        continuous: true,
+        interimResults: false,
+        maxAlternatives: 1,
+        onStart: () => {
           if (!isCurrent) {
             return
           }
-          try {
-            recognizer.start()
-          } catch (error) {
-            setSpeechError(error instanceof Error ? error.message : String(error))
+          setListening(true)
+        },
+        onResult: (transcript) => {
+          if (!isCurrent) {
+            return
           }
-        }, 250)
-      },
-    })
+          setSpeechTranscript(transcript)
+          const matches = matchPhraseWords(active.phrase.original, transcript)
+          setMatchedPromptWords(matches)
 
-    speechRecognizerRef.current = recognizer
-    setSpeechSupported(recognizer.isSupported)
+          if (matches.every(Boolean)) {
+            if (flipTimeoutRef.current !== null) {
+              window.clearTimeout(flipTimeoutRef.current)
+            }
+            flipTimeoutRef.current = window.setTimeout(() => {
+              if (!isCurrent) {
+                return
+              }
+              setFlipped(true)
+              setCurrentPhaseIndex(0)
+              flipTimeoutRef.current = null
+            }, 1200)
+          }
+        },
+        onError: (message) => {
+          if (!isCurrent) {
+            return
+          }
+          hasRecognitionError = true
+          setListening(false)
+          setSpeechTranscript('')
+          setSpeechError(message)
+        },
+        onEnd: () => {
+          if (!isCurrent) {
+            return
+          }
+          setListening(false)
 
-    if (!recognizer.isSupported) {
-      setSpeechError('Speech recognition is unavailable in this browser.')
-      return
-    }
+          if (hasRecognitionError) {
+            return
+          }
 
-    try {
-      recognizer.start()
-    } catch (error) {
-      setSpeechError(error instanceof Error ? error.message : String(error))
+          window.setTimeout(() => {
+            if (!isCurrent || flipped) {
+              return
+            }
+            try {
+              recognizer.start()
+            } catch (error) {
+              setSpeechError(error instanceof Error ? error.message : String(error))
+            }
+          }, 250)
+        },
+      })
+
+      speechRecognizerRef.current = recognizer
+      setSpeechSupported(recognizer.isSupported)
+
+      if (!recognizer.isSupported) {
+        setSpeechError('Speech recognition is unavailable in this browser.')
+        return () => {
+          isCurrent = false
+        }
+      }
+
+      try {
+        recognizer.start()
+      } catch (error) {
+        setSpeechError(error instanceof Error ? error.message : String(error))
+      }
+
+      return () => {
+        isCurrent = false
+        if (flipTimeoutRef.current !== null) {
+          window.clearTimeout(flipTimeoutRef.current)
+          flipTimeoutRef.current = null
+        }
+        recognizer.stop()
+        speechRecognizerRef.current = null
+        setListening(false)
+      }
     }
 
     return () => {
       isCurrent = false
-      if (flipTimeoutRef.current !== null) {
-        window.clearTimeout(flipTimeoutRef.current)
-        flipTimeoutRef.current = null
+    }
+  }, [active, currentPhase, currentPhaseIndex, currentPhases, deck, flowConfig, flipped, playText])
+
+  useEffect(() => {
+    if (currentPhase !== CardPhase.ListenFront) {
+      return
+    }
+
+    if (ttsPlaying) {
+      const recognizer = speechRecognizerRef.current
+      if (recognizer) {
+        recognizer.stop()
       }
-      recognizer.stop()
-      speechRecognizerRef.current = null
       setListening(false)
     }
-  }, [active, deck, flipped, ttsPlaying])
+  }, [currentPhase, ttsPlaying])
 
   const handleRate = useCallback(async (rating: Rating) => {
     if (!active) {
@@ -370,6 +448,7 @@ export function StudyPage() {
     const next = applyRating(active.schedule, rating, Date.now())
     await saveScheduling(next)
     setFlipped(false)
+    setCurrentPhaseIndex(0)
     setSessionRated((count) => count + 1)
     await refresh()
     setActiveIndex(0)
@@ -440,8 +519,10 @@ export function StudyPage() {
     ? 'Reproducing audio…'
     : listening
     ? 'Listening for your pronunciation…'
-    : flipped
-    ? speechTranscript      
+    : currentPhase === CardPhase.ShowBack
+    ? 'Translation shown.'
+    : currentPhase === CardPhase.AwaitRating
+    ? 'Rate the card.'
     : 'Speak the prompt aloud to flip the card.'
 
   return (
@@ -509,7 +590,10 @@ export function StudyPage() {
           frontText={promptWithMatches}
           backText={active.phrase.translated}
           flipped={flipped}
-          onToggle={() => setFlipped((value) => !value)}
+          onToggle={() => {
+            setFlipped((value) => !value)
+            setCurrentPhaseIndex(0)
+          }}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
           {speechError && speechSupported !== false && !flipped ? (

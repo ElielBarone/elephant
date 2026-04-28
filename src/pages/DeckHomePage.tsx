@@ -27,6 +27,8 @@ import {
 import type { Deck } from '@/types/models'
 import { IdiomInformation } from '@/components/IdiomInformation'
 import { VolumeToggleButton } from '@/components/VolumeToggleButton'
+import MicRoundedIcon from '@mui/icons-material/MicRounded';
+import MicOffRoundedIcon from '@mui/icons-material/MicOffRounded';
 
 export function DeckHomePage() {
   const { deckId } = useParams()
@@ -97,7 +99,7 @@ export function DeckHomePage() {
     navigate('/')
   }
 
-  const persistTtsField = async (patch: Pick<Deck, 'ttsPromptEnabled' | 'ttsAnswerEnabled'>) => {
+  const persistTtsField = async (patch: Pick<Deck, 'ttsPromptEnabled' | 'ttsAnswerEnabled' | 'voiceAutoFlipEnabled'>) => {
     const next: Deck = {
       ...deck,
       ...patch,
@@ -127,6 +129,14 @@ export function DeckHomePage() {
             <VolumeToggleButton value={deck.ttsPromptEnabled !== false} 
             onChange={(value) => void persistTtsField({ ttsPromptEnabled: value })} />
           </IdiomInformation>
+          <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 220 }}>
+            <Typography variant="body2">Auto-flip by voice</Typography>
+            <VolumeToggleButton value={deck.voiceAutoFlipEnabled !== false}
+            selectedIcon={<MicRoundedIcon/>}
+            unselectedIcon={<MicOffRoundedIcon/>}
+              onChange={(value) => void persistTtsField({ voiceAutoFlipEnabled: value })}
+            />
+          </Stack>
         </Stack>
       
 
