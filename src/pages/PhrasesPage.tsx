@@ -2,6 +2,7 @@ import AddIcon from '@mui/icons-material/Add'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditIcon from '@mui/icons-material/Edit'
+import FileUploadIcon from '@mui/icons-material/FileUpload'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
@@ -10,6 +11,7 @@ import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
 import Fab from '@mui/material/Fab'
 import IconButton from '@mui/material/IconButton'
+import Snackbar from '@mui/material/Snackbar'
 import Stack from '@mui/material/Stack'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -31,6 +33,7 @@ import {
   saveDeck,
 } from '@/lib/db/deckStorage'
 import { phraseFormSchema, type PhraseFormValues } from '@/lib/forms/schemas'
+import { ImportPhrasesDialog } from '@/components/ImportPhrasesDialog'
 import type { Deck, Phrase } from '@/types/models'
 
 export function PhrasesPage() {
@@ -40,8 +43,10 @@ export function PhrasesPage() {
   const [deck, setDeck] = useState<Deck | null>(null)
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Phrase | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Phrase | null>(null)
+  const [importMessage, setImportMessage] = useState<string | null>(null)
 
   const form = useForm<PhraseFormValues>({
     resolver: zodResolver(phraseFormSchema),
@@ -130,6 +135,24 @@ export function PhrasesPage() {
     setDeleteTarget(null)
   }
 
+  const handleImport = async (importedPhrases: Phrase[]) => {
+    if (!deck) {
+      return
+    }
+    const updatedDeck: Deck = {
+      ...deck,
+      phrases: [...deck.phrases, ...importedPhrases],
+      updatedAt: new Date().toISOString(),
+    }
+    await persistDeck(updatedDeck)
+    setImportDialogOpen(false)
+    setImportMessage(
+      t('phrases.importDialog.success', {
+        count: importedPhrases.length,
+      }),
+    )
+  }
+
   if (!deckId) {
     return <Alert severity="error">{t('general.missingDeck')}</Alert>
   }
@@ -151,6 +174,14 @@ export function PhrasesPage() {
         <Typography variant="h5" sx={{ flex: 1 }}>
           {t('phrases.title', { deckTitle: deck.title })}
         </Typography>
+        <Button
+          size="small"
+          startIcon={<FileUploadIcon />}
+          onClick={() => setImportDialogOpen(true)}
+          variant="outlined"
+        >
+          {t('phrases.importButton')}
+        </Button>
       </Stack>
 
       <Table size="small">
@@ -236,6 +267,21 @@ export function PhrasesPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ImportPhrasesDialog
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        onImport={handleImport}
+        existingPhrases={deck.phrases}
+      />
+
+      <Snackbar
+        open={Boolean(importMessage)}
+        autoHideDuration={4000}
+        onClose={() => setImportMessage(null)}
+        message={importMessage}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
     </Stack>
   )
 }

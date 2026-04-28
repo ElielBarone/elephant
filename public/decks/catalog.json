@@ -1,6 +1,12 @@
 {
   "bundled": [
     {
+      "file": "starter-itIT-to-ptBR-fatti.json",
+      "label": "Fatti i fatti tuoi",
+      "nativeIdiom": "itIT",
+      "learningIdiom": "ptBR"
+    },
+    {
       "file": "starter-ptBR-to-enUS.json",
       "label": "US English wolf of wall street",
       "nativeIdiom": "ptBR",

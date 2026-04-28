@@ -14,7 +14,8 @@ import { Link as RouterLink, Outlet, useLocation, useNavigate } from 'react-rout
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/lib/theme/ThemeContext'
 import type { AppLocale } from '@/lib/locale/LocaleContext'
-import { MouseEvent, useState } from 'react'
+import type { MouseEvent } from 'react'
+import { useState } from 'react'
 import { appLocaleLabels, appLocales, useLocale } from '@/lib/locale/LocaleContext'
 import { IdiomFlag } from '@/components/IdiomFlag'
 
