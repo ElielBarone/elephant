@@ -168,7 +168,7 @@ export function PhrasesPage() {
               <TableCell sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
                 {phrase.translated}
               </TableCell>
-              <TableCell align="right">
+              <TableCell align="right" sx={{ width: 70 , padding: 0}} >
                 <IconButton aria-label="edit" onClick={() => openEdit(phrase)}>
                   <EditIcon />
                 </IconButton>

@@ -327,11 +327,9 @@ export function StudyPage() {
       setSpeechTranscript('')
       setMatchedPromptWords([])
       setListening(false)
-
-      let hasRecognitionError = false
       const recognizer = createSpeechRecognizer({
         lang: language,
-        continuous: true,
+        continuous: false,
         interimResults: false,
         maxAlternatives: 1,
         onStart: () => {
@@ -366,7 +364,6 @@ export function StudyPage() {
           if (!isCurrent) {
             return
           }
-          hasRecognitionError = true
           setListening(false)
           setSpeechTranscript('')
           setSpeechError(message)
@@ -376,21 +373,6 @@ export function StudyPage() {
             return
           }
           setListening(false)
-
-          if (hasRecognitionError) {
-            return
-          }
-
-          window.setTimeout(() => {
-            if (!isCurrent || flipped) {
-              return
-            }
-            try {
-              recognizer.start()
-            } catch (error) {
-              setSpeechError(error instanceof Error ? error.message : String(error))
-            }
-          }, 250)
         },
       })
 
@@ -457,6 +439,7 @@ export function StudyPage() {
   const handleRetrySpeechRecognition = useCallback(() => {
     setSpeechError(null)
     setSpeechTranscript('')
+    setMatchedPromptWords([])
 
     const recognizer = speechRecognizerRef.current
     if (!recognizer) {
@@ -519,6 +502,8 @@ export function StudyPage() {
     ? 'Reproducing audio…'
     : listening
     ? 'Listening for your pronunciation…'
+    : currentPhase === CardPhase.ListenFront
+    ? 'Tap the microphone to try again.'
     : currentPhase === CardPhase.ShowBack
     ? 'Translation shown.'
     : currentPhase === CardPhase.AwaitRating
@@ -596,8 +581,8 @@ export function StudyPage() {
           }}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
-          {speechError && speechSupported !== false && !flipped ? (
-            <IconButton size="small"  onClick={handleRetrySpeechRecognition} >
+          {speechSupported !== false && currentPhase === CardPhase.ListenFront && !flipped && !listening ? (
+            <IconButton size="small" onClick={handleRetrySpeechRecognition}>
               <MicIcon />
             </IconButton>
           ) : null}
