@@ -28,6 +28,7 @@ import { speakWithIdiom } from '@/lib/tts/speak'
 import { createSpeechRecognizer, matchPhraseWords } from '@/lib/voice/speechRecognition'
 import type { CardSchedule, Deck, Idiom, Phrase, Rating } from '@/types/models'
 import MicIcon from '@mui/icons-material/Mic';
+import { getCardStatus } from '@/hooks/useCardStatus'
 
 interface StudyRow {
   phrase: Phrase
@@ -494,21 +495,7 @@ export function StudyPage() {
 
   const speakButtonDisabled = flipped ? !answerTtsOn : !promptTtsOn
 
-  const statusText = speechError
-    ? speechError
-    : speechSupported === false
-    ? 'Speech recognition not available. Tap to flip manually.'
-    : ttsPlaying
-    ? 'Reproducing audio…'
-    : listening
-    ? 'Listening for your pronunciation…'
-    : currentPhase === CardPhase.ListenFront
-    ? 'Tap the microphone to try again.'
-    : currentPhase === CardPhase.ShowBack
-    ? 'Translation shown.'
-    : currentPhase === CardPhase.AwaitRating
-    ? 'Rate the card.'
-    : 'Speak the prompt aloud to flip the card.'
+  const { statusText } = getCardStatus({ speechError, speechSupported, ttsPlaying, listening, currentPhase, flipped })
 
   return (
     <Stack spacing={2.5} sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', minHeight: 0 }}>
