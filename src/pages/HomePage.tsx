@@ -17,6 +17,7 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { CardAvailableDeck } from '@/components/CardAvailableDeck'
@@ -42,6 +43,7 @@ interface CatalogPayload {
 }
 
 export function HomePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [decks, setDecks] = useState<Deck[]>([])
   const [catalog, setCatalog] = useState<CatalogPayload | null>(null)
@@ -77,7 +79,7 @@ export function HomePage() {
         }
       } catch {
         if (!cancelled) {
-          setCatalogError('Could not load bundled decks')
+          setCatalogError(t('home.couldNotLoadBundledDecks'))
         }
       }
     })()
@@ -95,15 +97,15 @@ export function HomePage() {
     },
   })
 
-  const handleInstallBundled = async (file: string) => {
+  const handleInstallBundled = async (file: string, label: string) => {
     setBusyFile(file)
     setFormError(null)
     try {
-      const deck = await copyBundledDeck(file, Date.now())
+      const deck = await copyBundledDeck(file, Date.now(), label)
       await refreshDecks()
       navigate(`/deck/${deck.id}/study`)
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Install failed')
+      setFormError(error instanceof Error ? error.message : t('home.installFailed'))
     } finally {
       setBusyFile(null)
     }
@@ -123,7 +125,7 @@ export function HomePage() {
       await refreshDecks()
       navigate(`/deck/${deck.id}/phrases`)
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Create failed')
+      setFormError(error instanceof Error ? error.message : t('home.createFailed'))
     }
   })
 
@@ -131,7 +133,7 @@ export function HomePage() {
     <Stack spacing={3}>      
 
         <Typography variant="h4" component="h1" gutterBottom color="primary">
-          Decks
+          {t('home.title')}
         </Typography>
   
 
@@ -150,7 +152,7 @@ export function HomePage() {
               />
             ))}
             <CardNewItem
-            label="New Deck"
+            label={t('home.newDeck')}
             icon={<AddIcon />}
             minHeight={72}
             onClick={() => setCreateOpen(true)}
@@ -163,7 +165,7 @@ export function HomePage() {
 
       <Box>
         <Typography variant="h6" gutterBottom>
-          Bundled starters
+          {t('home.bundledStarters')}
         </Typography>
         {catalog == null && !catalogError ? (
           <CircularProgress size={28} />
@@ -177,7 +179,7 @@ export function HomePage() {
                 learningIdiom={entry.learningIdiom}
                 disabled={busyFile != null}
                 copying={busyFile === entry.file}
-                onCopy={() => handleInstallBundled(entry.file)}
+                onCopy={() => handleInstallBundled(entry.file, entry.label)}
               />
             ))}
           </Stack>
@@ -185,11 +187,11 @@ export function HomePage() {
       </Box>
 
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Create deck</DialogTitle>
+        <DialogTitle>{t('home.createDeck')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
-              label="Title"
+              label={t('home.titleLabel')}
               fullWidth
               {...form.register('title')}
               error={Boolean(form.formState.errors.title)}
@@ -200,10 +202,10 @@ export function HomePage() {
               name="nativeIdiom"
               render={({ field }) => (
                 <FormControl fullWidth>
-                  <InputLabel id="native-idiom">Native language</InputLabel>
+                  <InputLabel id="native-idiom">{t('home.nativeLanguage')}</InputLabel>
                   <Select
                     labelId="native-idiom"
-                    label="Native language"
+                    label={t('home.nativeLanguage')}
                     value={field.value}
                     onChange={(event) => field.onChange(event.target.value as Idiom)}
                     renderValue={(value) => (
@@ -228,10 +230,10 @@ export function HomePage() {
               name="learningIdiom"
               render={({ field }) => (
                 <FormControl fullWidth error={Boolean(form.formState.errors.learningIdiom)}>
-                  <InputLabel id="learning-idiom">Learning language</InputLabel>
+                  <InputLabel id="learning-idiom">{t('home.learningLanguage')}</InputLabel>
                   <Select
                     labelId="learning-idiom"
-                    label="Learning language"
+                    label={t('home.learningLanguage')}
                     value={field.value}
                     onChange={(event) => field.onChange(event.target.value as Idiom)}
                     renderValue={(value) => (
@@ -259,9 +261,9 @@ export function HomePage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCreateOpen(false)}>Cancel</Button>
+          <Button onClick={() => setCreateOpen(false)}>{t('general.cancel')}</Button>
           <Button onClick={() => void handleCreateDeck()} variant="contained">
-            Create
+            {t('home.create')}
           </Button>
         </DialogActions>
       </Dialog>

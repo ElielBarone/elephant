@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { keyframes } from '@mui/material/styles'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FlagsRelated } from '@/components/FlagsRelated'
 import { FlipCard } from '@/components/FlipCard'
@@ -63,6 +64,7 @@ function buildRows(deck: Deck, schedules: CardSchedule[], now: number): StudyRow
 
 export function StudyPage() {
   const { deckId } = useParams()
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [, splashScreenActions] = useSplashScreen()
   const [deck, setDeck] = useState<Deck | null>(null)
@@ -143,16 +145,16 @@ export function StudyPage() {
     splashScreenActions.show(
       'well-done',
       {
-        title: 'Congratulations!',
-        message: "I'm proud of you, come back tomorrow.",
+        title: t('study.congratulationsTitle'),
+        message: t('study.congratulationsMessage'),
       },
       'happy',
       <Stack spacing={1.5}>        
         <Button variant="contained" onClick={openDecks}>
-          Back to Decks
+          {t('study.backToDecks')}
         </Button>
         <Button variant="outlined" onClick={startAgain}>
-          Start Again
+          {t('study.startAgain')}
         </Button>
       </Stack>,
       0,
@@ -480,34 +482,34 @@ export function StudyPage() {
   }, [])
 
   if (!deckId) {
-    return <Alert severity="error">Missing deck</Alert>
+    return <Alert severity="error">{t('general.missingDeck')}</Alert>
   }
 
   if (loading) {
-    return <Typography>Loading…</Typography>
+    return <Typography>{t('general.loading')}</Typography>
   }
 
   if (!deck) {
-    return <Alert severity="warning">Deck not found</Alert>
+    return <Alert severity="warning">{t('general.deckNotFound')}</Alert>
   }
 
   if (deck.phrases.length === 0) {
     return (
       <Stack spacing={2}>
-        <Typography>This deck has no phrases yet.</Typography>
+        <Typography>{t('study.thisDeckNoPhrases')}</Typography>
         <Typography
           color="primary"
           sx={{ cursor: 'pointer' }}
           onClick={() => navigate(`/deck/${deck.id}/phrases`)}
         >
-          Add phrases
+          {t('study.addPhrases')}
         </Typography>
       </Stack>
     )
   }
 
   if (!active) {
-    return <Alert severity="info">No study rows available.</Alert>
+    return <Alert severity="info">{t('study.noStudyRows')}</Alert>
   }
 
   const nextDue = rows
@@ -552,7 +554,7 @@ export function StudyPage() {
           </Stack>
         </Box>
         <IconButton
-          aria-label="speak visible side"
+          aria-label={t('study.speakVisibleSide')}
           disabled={speakButtonDisabled}
           onClick={() => speakVisibleSide()}
         >
@@ -562,27 +564,30 @@ export function StudyPage() {
 
       {!hasDue ? (
         <Alert severity="info">
-          Nothing is due right now.
+          {t('study.nothingDue')}
           {nextDue ? (
             <span>
               {' '}
-              Next card around {new Date(nextDue).toLocaleString()}.
+              {t('study.nextCardAround', { time: new Date(nextDue).toLocaleString() })}
             </span>
           ) : null}{' '}
-          You can still review early in due order.
+          {t('study.reviewEarly')}
         </Alert>
       ) : null}
 
       <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 999 }} />
       <Typography variant="caption" color="text.secondary">
-        Reviewed {sessionRated}
-        {sessionTarget > 0 ? ` of ${sessionTarget}` : ''} · {rows.length} in queue
+        {t('study.reviewedQueue', {
+          reviewed: sessionRated,
+          total: sessionTarget,
+          queue: rows.length,
+        })}
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         <FlipCard
-          frontTitle="Prompt"
-          backTitle="Translation"
+          frontTitle={t('study.prompt')}
+          backTitle={t('study.translation')}
           frontText={promptWithMatches}
           backText={active.phrase.translated}
           backExtra={explainButton}
@@ -617,7 +622,7 @@ export function StudyPage() {
         </Box>
         {speechTranscript && !flipped ? (
           <Typography variant="caption" color="text.secondary">
-            Heard: {speechTranscript}
+            {t('study.heard')} {speechTranscript}
           </Typography>
         ) : null}
       </Box>

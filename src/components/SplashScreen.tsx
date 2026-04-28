@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { SplashReactionType } from '@/components/MascotReactions'
+import i18n from '@/lib/i18n'
 
 
 export type SplashMood = 'neutral' | 'happy'
@@ -36,8 +37,8 @@ const initialSplashState: SplashScreenState = {
   open: true,
   reactionType: 'default',
   mood: 'happy',
-  title: 'Ohoooo!',
-  message: 'Welcome back',
+  title: i18n.t('splash.welcomeTitle'),
+  message: i18n.t('splash.welcomeMessage'),
   autoHideMs: 2000,
 }
 

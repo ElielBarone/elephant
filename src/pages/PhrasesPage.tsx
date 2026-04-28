@@ -21,6 +21,7 @@ import Typography from '@mui/material/Typography'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { nanoid } from 'nanoid'
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -33,6 +34,7 @@ import { phraseFormSchema, type PhraseFormValues } from '@/lib/forms/schemas'
 import type { Deck, Phrase } from '@/types/models'
 
 export function PhrasesPage() {
+  const { t } = useTranslation()
   const { deckId } = useParams()
   const navigate = useNavigate()
   const [deck, setDeck] = useState<Deck | null>(null)
@@ -129,15 +131,15 @@ export function PhrasesPage() {
   }
 
   if (!deckId) {
-    return <Alert severity="error">Missing deck</Alert>
+    return <Alert severity="error">{t('general.missingDeck')}</Alert>
   }
 
   if (loading) {
-    return <Typography>Loading…</Typography>
+    return <Typography>{t('general.loading')}</Typography>
   }
 
   if (!deck) {
-    return <Alert severity="warning">Deck not found</Alert>
+    return <Alert severity="warning">{t('general.deckNotFound')}</Alert>
   }
 
   return (
@@ -147,16 +149,16 @@ export function PhrasesPage() {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h5" sx={{ flex: 1 }}>
-          Phrases · {deck.title}
+          {t('phrases.title', { deckTitle: deck.title })}
         </Typography>
       </Stack>
 
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>Prompt</TableCell>
-            <TableCell>Translation</TableCell>
-            <TableCell align="right">Actions</TableCell>
+            <TableCell>{t('phrases.prompt')}</TableCell>
+            <TableCell>{t('phrases.translation')}</TableCell>
+            <TableCell align="right">{t('phrases.actions')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -169,10 +171,10 @@ export function PhrasesPage() {
                 {phrase.translated}
               </TableCell>
               <TableCell align="right" sx={{ width: 70 , padding: 0}} >
-                <IconButton aria-label="edit" onClick={() => openEdit(phrase)}>
+                <IconButton aria-label={t('phrases.editAria')} onClick={() => openEdit(phrase)}>
                   <EditIcon />
                 </IconButton>
-                <IconButton aria-label="delete" onClick={() => setDeleteTarget(phrase)}>
+                <IconButton aria-label={t('phrases.deleteAria')} onClick={() => setDeleteTarget(phrase)}>
                   <DeleteOutlineIcon />
                 </IconButton>
               </TableCell>
@@ -183,7 +185,7 @@ export function PhrasesPage() {
 
       <Fab
         color="primary"
-        aria-label="add phrase"
+        aria-label={t('phrases.addPhraseAria')}
         sx={{ position: 'fixed', right: 24, bottom: 24 }}
         onClick={openCreate}
       >
@@ -191,11 +193,11 @@ export function PhrasesPage() {
       </Fab>
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>{editing ? 'Edit phrase' : 'Add phrase'}</DialogTitle>
+        <DialogTitle>{editing ? t('phrases.editPhrase') : t('phrases.addPhrase')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
-              label="Learning language prompt"
+              label={t('phrases.learningLanguagePrompt')}
               fullWidth
               multiline
               minRows={2}
@@ -204,7 +206,7 @@ export function PhrasesPage() {
               helperText={form.formState.errors.original?.message}
             />
             <TextField
-              label="Native translation"
+              label={t('phrases.nativeTranslation')}
               fullWidth
               multiline
               minRows={2}
@@ -215,22 +217,22 @@ export function PhrasesPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDialogOpen(false)}>{t('general.cancel')}</Button>
           <Button variant="contained" onClick={() => void handleSavePhrase()}>
-            Save
+            {t('general.save')}
           </Button>
         </DialogActions>
       </Dialog>
 
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
-        <DialogTitle>Delete phrase?</DialogTitle>
+        <DialogTitle>{t('phrases.deletePhrase')}</DialogTitle>
         <DialogContent>
-          <Typography>This removes the phrase and its scheduling from this device.</Typography>
+          <Typography>{t('phrases.deletePhraseBody')}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button onClick={() => setDeleteTarget(null)}>{t('general.cancel')}</Button>
           <Button color="error" variant="contained" onClick={() => void handleDelete()}>
-            Delete
+            {t('general.delete')}
           </Button>
         </DialogActions>
       </Dialog>

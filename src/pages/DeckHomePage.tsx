@@ -16,6 +16,7 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   deleteDeck,
@@ -31,6 +32,7 @@ import MicRoundedIcon from '@mui/icons-material/MicRounded';
 import MicOffRoundedIcon from '@mui/icons-material/MicOffRounded';
 
 export function DeckHomePage() {
+  const { t } = useTranslation()
   const { deckId } = useParams()
   const navigate = useNavigate()
   const [deck, setDeck] = useState<Deck | null>(null)
@@ -62,15 +64,15 @@ export function DeckHomePage() {
   }, [deckId])
 
   if (!deckId) {
-    return <Alert severity="error">Missing deck</Alert>
+    return <Alert severity="error">{t('general.missingDeck')}</Alert>
   }
 
   if (loading) {
-    return <Typography>Loading…</Typography>
+    return <Typography>{t('general.loading')}</Typography>
   }
 
   if (!deck) {
-    return <Alert severity="warning">Deck not found</Alert>
+    return <Alert severity="warning">{t('general.deckNotFound')}</Alert>
   }
 
   const handleRename = async () => {
@@ -112,25 +114,25 @@ export function DeckHomePage() {
   return (
     <Stack spacing={3}>      
         <Typography variant="overline" color="text.secondary">
-          Deck
-        </Typography>
+          {t('deck.deckLabel')}
         
-          <Typography variant="h4" component="h1">
+          <Typography variant="h4">
             {deck.title}
           </Typography>
-          <Chip label={`${deck.phrases.length} cards`} variant="outlined" sx={{ width: 'fit-content'}}/>
-        
+          <Chip label={t('deck.cards', { count: deck.phrases.length })} variant="outlined" sx={{ width: 'fit-content'}}/>
+        </Typography>
+
         <Stack direction="row" spacing={3} flexWrap="wrap"  useFlexGap sx={{ mt: 1 }}>
-          <IdiomInformation label="Native" idiom={deck.nativeIdiom}>
+          <IdiomInformation label={t('deck.native')} idiom={deck.nativeIdiom}>
             <VolumeToggleButton value={deck.ttsAnswerEnabled !== false} 
             onChange={(value) => void persistTtsField({ ttsAnswerEnabled: value })} />
           </IdiomInformation>
-          <IdiomInformation label="Learning" idiom={deck.learningIdiom} >          
+          <IdiomInformation label={t('deck.learning')} idiom={deck.learningIdiom} >          
             <VolumeToggleButton value={deck.ttsPromptEnabled !== false} 
             onChange={(value) => void persistTtsField({ ttsPromptEnabled: value })} />
           </IdiomInformation>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 220 }}>
-            <Typography variant="body2">Auto-flip by voice</Typography>
+            <Typography variant="body2">{t('deck.autoFlipByVoice')}</Typography>
             <VolumeToggleButton value={deck.voiceAutoFlipEnabled !== false}
             selectedIcon={<MicRoundedIcon/>}
             unselectedIcon={<MicOffRoundedIcon/>}
@@ -150,7 +152,7 @@ export function DeckHomePage() {
         startIcon={<SchoolIcon />}
         onClick={() => navigate(`/deck/${deck.id}/study`)}
       >
-        Study
+        {t('deck.study')}
       </Button>
       <Button
         variant="outlined"
@@ -158,59 +160,59 @@ export function DeckHomePage() {
         startIcon={<EditNoteIcon />}
         onClick={() => navigate(`/deck/${deck.id}/phrases`)}
       >
-        Edit phrases
+        {t('deck.editPhrases')}
       </Button>
       <Button
         variant="outlined"
         startIcon={<FileCopyIcon />}
         onClick={() =>
           void handleDuplicate().catch(() => {
-            setError('Duplicate failed')
+            setError(t('deck.duplicateFailed'))
           })
         }
       >
-        Duplicate deck
+        {t('deck.duplicateDeck')}
       </Button>
       <Button variant="text" onClick={() => {
         setRenameValue(deck.title)
         setRenameOpen(true)
       }}
       >
-        Rename
+        {t('deck.rename')}
       </Button>
       <Button color="error" variant="outlined" startIcon={<DeleteOutlineIcon />} onClick={() => setDeleteOpen(true)}>
-        Delete deck
+        {t('deck.deleteDeck')}
       </Button>
 
       <Dialog open={renameOpen} onClose={() => setRenameOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle>Rename deck</DialogTitle>
+        <DialogTitle>{t('deck.rename')}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Title"
+            label={t('deck.title')}
             fullWidth
             value={renameValue}
             onChange={(event) => setRenameValue(event.target.value)}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRenameOpen(false)}>Cancel</Button>
+          <Button onClick={() => setRenameOpen(false)}>{t('general.cancel')}</Button>
           <Button onClick={() => void handleRename()} variant="contained">
-            Save
+            {t('general.save')}
           </Button>
         </DialogActions>
       </Dialog>
 
       <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
-        <DialogTitle>Delete this deck?</DialogTitle>
+        <DialogTitle>{t('deck.deleteThisDeck')}</DialogTitle>
         <DialogContent>
-          <Typography>This removes the deck, scheduling, and cached audio for this device.</Typography>
+          <Typography>{t('deck.deleteDeckBody')}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteOpen(false)}>{t('general.cancel')}</Button>
           <Button color="error" variant="contained" onClick={() => void handleDelete()}>
-            Delete
+            {t('general.delete')}
           </Button>
         </DialogActions>
       </Dialog>

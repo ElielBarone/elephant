@@ -5,8 +5,10 @@ import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import App from './App.tsx'
 import './index.css'
+import './lib/i18n'
 import { normalizeRouterBasename } from '@/lib/router/basename'
 import { ThemeProvider, useTheme } from '@/lib/theme/ThemeContext'
+import { LocaleProvider } from '@/lib/locale/LocaleContext'
 
 function AppWithTheme() {
   const { mode } = useTheme()
@@ -42,7 +44,9 @@ registerSW({ immediate: true })
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
-      <AppWithTheme />
+      <LocaleProvider>
+        <AppWithTheme />
+      </LocaleProvider>
     </ThemeProvider>
   </StrictMode>,
 )

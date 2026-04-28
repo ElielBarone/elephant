@@ -3,6 +3,7 @@ import CardActionArea from '@mui/material/CardActionArea'
 import CardContent from '@mui/material/CardContent'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
+import { useTranslation } from 'react-i18next'
 import { FlagsRelated } from '@/components/FlagsRelated'
 import { idiomLabel } from '@/lib/idiom'
 import type { Deck } from '@/types/models'
@@ -13,6 +14,7 @@ export interface DeckCardProps {
 }
 
 export function DeckCard({ deck, onOpen }: DeckCardProps) {
+  const { t } = useTranslation()
   return (
     <Card variant="outlined">
       <CardActionArea onClick={onOpen}>
@@ -35,7 +37,7 @@ export function DeckCard({ deck, onOpen }: DeckCardProps) {
             <Typography variant="h6" >{deck.title}</Typography>
           </Stack>
           <Typography variant="caption" color="text.secondary">
-            {deck.phrases.length} cards
+            {t('deck.cards', { count: deck.phrases.length })}
           </Typography>
         </CardContent>
       </CardActionArea>

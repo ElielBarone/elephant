@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
+import { useTranslation } from 'react-i18next'
 
 export interface FlipCardProps {
   frontTitle: string
@@ -22,6 +23,7 @@ export function FlipCard({
   flipped,
   onToggle,
 }: FlipCardProps) {
+  const { t } = useTranslation()
   return (
     <Box
       onClick={onToggle}
@@ -79,7 +81,7 @@ export function FlipCard({
             {frontText}
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 2 }}>
-            Tap to reveal translation
+            {t('flipCard.revealTranslation')}
           </Typography>
         </Paper>
         <Paper
@@ -107,7 +109,7 @@ export function FlipCard({
           </Typography>
           {backExtra}
           <Typography variant="caption" sx={{ mt: 2, color: 'rgba(255,255,255,0.72)' }}>
-            Tap to show prompt
+            {t('flipCard.showPrompt')}
           </Typography>
         </Paper>
       </Box>

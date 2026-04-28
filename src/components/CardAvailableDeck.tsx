@@ -4,6 +4,7 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
+import { useTranslation } from 'react-i18next'
 import { FlagsRelated } from '@/components/FlagsRelated'
 import { idiomLabel } from '@/lib/idiom'
 import type { Idiom } from '@/types/models'
@@ -25,6 +26,7 @@ export function CardAvailableDeck({
   copying,
   onCopy,
 }: CardAvailableDeckProps) {
+  const { t } = useTranslation()
   return (
     <Card variant="outlined">        
       <CardContent>
@@ -51,7 +53,7 @@ export function CardAvailableDeck({
             disabled={disabled}
             onClick={() => void onCopy()}
           >
-            {copying ? 'Copying…' : 'Copy to this device'}
+            {copying ? t('cards.copying') : t('cards.copyToDevice')}
           </Button>
         </Stack>
       </CardContent>

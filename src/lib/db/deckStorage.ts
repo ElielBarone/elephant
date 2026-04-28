@@ -139,6 +139,7 @@ export interface BundledDeckFile {
 export async function copyBundledDeck(
   assetPath: string,
   now: number,
+  titleOverride?: string,
 ): Promise<Deck> {
   const base = import.meta.env.BASE_URL.replace(/\/?$/, '/')
   const response = await fetch(`${base}decks/${assetPath}`)
@@ -154,7 +155,7 @@ export async function copyBundledDeck(
   }))
   const deck: Deck = {
     id: deckId,
-    title: raw.title,
+    title: titleOverride ?? raw.title,
     nativeIdiom: raw.nativeIdiom,
     learningIdiom: raw.learningIdiom,
     phrases,
