@@ -3,8 +3,8 @@
     {
       "file": "starter-itIT-to-ptBR-fatti.json",
       "label": "Fatti i fatti tuoi",
-      "nativeIdiom": "itIT",
-      "learningIdiom": "ptBR"
+      "nativeIdiom": "ptBR",
+      "learningIdiom": "itIT"
     },
     {
       "file": "starter-ptBR-to-enUS.json",
