@@ -1,9 +1,11 @@
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import FileCopyIcon from '@mui/icons-material/FileCopy'
+import KeyboardIcon from '@mui/icons-material/Keyboard'
 import SchoolIcon from '@mui/icons-material/School'
 import Alert from '@mui/material/Alert'
 
+import Badge from '@mui/material/Badge'
 import Button from '@mui/material/Button'
 import Chip from '@mui/material/Chip'
 import Dialog from '@mui/material/Dialog'
@@ -25,6 +27,7 @@ import {
   getDeckStats,
   saveDeck,
   writeLastDeckId,
+  type DeckPendingByMode,
 } from '@/lib/db/deckStorage'
 import type { Deck } from '@/types/models'
 import { IdiomInformation } from '@/components/IdiomInformation'
@@ -37,7 +40,7 @@ export function DeckHomePage() {
   const { deckId } = useParams()
   const navigate = useNavigate()
   const [deck, setDeck] = useState<Deck | null>(null)
-  const [pending, setPending] = useState<number | null>(null)
+  const [pending, setPending] = useState<DeckPendingByMode | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [renameOpen, setRenameOpen] = useState(false)
@@ -128,14 +131,6 @@ export function DeckHomePage() {
           </Typography>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
             <Chip label={t('deck.cards', { count: deck.phrases.length })} variant="outlined" sx={{ width: 'fit-content'}}/>
-            {pending !== null ? (
-              <Chip
-                label={t('deck.pending', { count: pending })}
-                color={pending > 0 ? 'primary' : 'default'}
-                variant={pending > 0 ? 'filled' : 'outlined'}
-                sx={{ width: 'fit-content' }}
-              />
-            ) : null}
           </Stack>
         </Typography>
 
@@ -163,14 +158,43 @@ export function DeckHomePage() {
 
       {error ? <Alert severity="error">{error}</Alert> : null}
 
-      <Button
-        variant="contained"
-        size="large"
-        startIcon={<SchoolIcon />}
-        onClick={() => navigate(`/deck/${deck.id}/study`)}
-      >
-        {t('deck.study')}
-      </Button>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+        <Badge
+          badgeContent={pending?.flip ?? 0}
+          color="error"
+          max={99}
+          overlap="rectangular"
+          sx={{ flex: 1, '& .MuiBadge-badge': { top: 8, right: 12 } }}
+        >
+          <Button
+            fullWidth
+            variant="contained"
+            size="large"
+            startIcon={<SchoolIcon />}
+            onClick={() => navigate(`/deck/${deck.id}/study`)}
+          >
+            {t('deck.flipCards')}
+          </Button>
+        </Badge>
+        <Badge
+          badgeContent={pending?.compose ?? 0}
+          color="error"
+          max={99}
+          overlap="rectangular"
+          sx={{ flex: 1, '& .MuiBadge-badge': { top: 8, right: 12 } }}
+        >
+          <Button
+            fullWidth
+            variant="contained"
+            color="secondary"
+            size="large"
+            startIcon={<KeyboardIcon />}
+            onClick={() => navigate(`/deck/${deck.id}/study/compose`)}
+          >
+            {t('deck.composeCards')}
+          </Button>
+        </Badge>
+      </Stack>
       <Button
         variant="outlined"
         size="large"

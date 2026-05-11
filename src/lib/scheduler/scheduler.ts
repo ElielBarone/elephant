@@ -1,4 +1,4 @@
-import type { CardSchedule, Rating } from '@/types/models'
+import type { CardSchedule, Rating, StudyMode } from '@/types/models'
 
 export const MIN_EASE = 1.3
 
@@ -31,10 +31,12 @@ export function createInitialSchedule(
   deckId: string,
   cardId: string,
   now: number,
+  mode: StudyMode = 'flip',
 ): CardSchedule {
   return {
     deckId,
     cardId,
+    mode,
     phase: 'learning',
     ease: 2.5,
     intervalDays: 0,

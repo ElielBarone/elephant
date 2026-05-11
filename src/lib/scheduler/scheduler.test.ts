@@ -84,6 +84,7 @@ describe('review and lapses', () => {
     const review: CardSchedule = {
       deckId: 'd1',
       cardId: 'c1',
+      mode: 'flip',
       phase: 'review',
       ease: 2.5,
       intervalDays: 4,
@@ -104,6 +105,7 @@ describe('review and lapses', () => {
     const review: CardSchedule = {
       deckId: 'd1',
       cardId: 'c1',
+      mode: 'flip',
       phase: 'review',
       ease: 2.5,
       intervalDays: 2,
@@ -122,6 +124,7 @@ describe('review and lapses', () => {
     const review: CardSchedule = {
       deckId: 'd1',
       cardId: 'c1',
+      mode: 'flip',
       phase: 'review',
       ease: 2.5,
       intervalDays: 2,
@@ -142,6 +145,7 @@ describe('sortDueFirst', () => {
     const a: CardSchedule = {
       deckId: 'd',
       cardId: 'a',
+      mode: 'flip',
       phase: 'review',
       ease: 2.5,
       intervalDays: 1,
@@ -154,6 +158,7 @@ describe('sortDueFirst', () => {
     const b: CardSchedule = {
       deckId: 'd',
       cardId: 'b',
+      mode: 'flip',
       phase: 'review',
       ease: 2.5,
       intervalDays: 1,
@@ -173,6 +178,7 @@ describe('relearning graduation', () => {
     let s: CardSchedule = {
       deckId: 'd1',
       cardId: 'c1',
+      mode: 'flip',
       phase: 'review',
       ease: 2.5,
       intervalDays: 10,

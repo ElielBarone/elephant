@@ -29,6 +29,7 @@ import {
   createEmptyDeck,
   getDeckStats,
   listDeckRecords,
+  type DeckPendingByMode,
 } from '@/lib/db/deckStorage'
 import type { Deck, Idiom } from '@/types/models'
 import { idiomValues } from '@/types/models'
@@ -47,7 +48,7 @@ export function HomePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [decks, setDecks] = useState<Deck[]>([])
-  const [pendingByDeck, setPendingByDeck] = useState<Record<string, number>>({})
+  const [pendingByDeck, setPendingByDeck] = useState<Record<string, DeckPendingByMode>>({})
   const [catalog, setCatalog] = useState<CatalogPayload | null>(null)
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [busyFile, setBusyFile] = useState<string | null>(null)
@@ -69,7 +70,7 @@ export function HomePage() {
         return [deck.id, pending] as const
       }),
     )
-    setPendingByDeck(Object.fromEntries(entries))
+    setPendingByDeck(Object.fromEntries(entries) as Record<string, DeckPendingByMode>)
   }, [])
 
   useEffect(() => {

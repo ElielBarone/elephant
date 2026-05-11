@@ -8,7 +8,6 @@ import IconButton from '@mui/material/IconButton'
 import LinearProgress from '@mui/material/LinearProgress'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import { keyframes } from '@mui/material/styles'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -42,11 +41,6 @@ const speechLanguageByIdiom: Record<string, string> = {
   enGB: 'en-GB',
   itIT: 'it-IT',
 }
-
-const blinkAnimation = keyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.2; }
-`
 
 function buildRows(deck: Deck, schedules: CardSchedule[], now: number): StudyRow[] {
   const map = new Map(schedules.map((row) => [row.cardId, row]))
@@ -573,27 +567,18 @@ export function StudyPage() {
           }}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mt: 1 }}>
-          {speechSupported !== false && currentPhase === CardPhase.ListenFront && !flipped && !listening ? (
-            <IconButton size="small" onClick={handleRetrySpeechRecognition}>
+          {speechSupported !== false && currentPhase === CardPhase.ListenFront && !flipped ? (
+            <IconButton
+              size="small"
+              onClick={handleRetrySpeechRecognition}
+              color={listening ? 'primary' : 'default'}
+            >
               <MicIcon />
             </IconButton>
-          ) : null}
-          {listening ? (
-            <Box
-              component="span"
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                bgcolor: 'primary.main',
-                animation: `${blinkAnimation} 1.4s ease-in-out infinite`,
-              }}
-            />
           ) : null}
           <Typography variant="caption" color={speechError ? 'error.main' : 'text.secondary'}>
             {statusText}
           </Typography>
-          
         </Box>
         {speechTranscript && !flipped ? (
           <Typography variant="caption" color="text.secondary">

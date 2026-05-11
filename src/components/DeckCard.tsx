@@ -5,12 +5,13 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import { useTranslation } from 'react-i18next'
 import { FlagsRelated } from '@/components/FlagsRelated'
+import type { DeckPendingByMode } from '@/lib/db/deckStorage'
 import { idiomLabel } from '@/lib/idiom'
 import type { Deck } from '@/types/models'
 
 export interface DeckCardProps {
   deck: Deck
-  pending?: number
+  pending?: DeckPendingByMode
   onOpen: () => void
 }
 
@@ -37,17 +38,26 @@ export function DeckCard({ deck, pending, onOpen }: DeckCardProps) {
             />
             <Typography variant="h6" >{deck.title}</Typography>
           </Stack>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }} flexWrap="wrap">
             <Typography variant="caption" color="text.secondary">
               {t('deck.cards', { count: deck.phrases.length })}
             </Typography>
-            {pending !== undefined ? (
+            {pending ? (
               <Typography
                 variant="caption"
-                color={pending > 0 ? 'primary.main' : 'text.secondary'}
-                sx={{ fontWeight: pending > 0 ? 600 : 'inherit' }}
+                color={pending.flip > 0 ? 'primary.main' : 'text.secondary'}
+                sx={{ fontWeight: pending.flip > 0 ? 600 : 'inherit' }}
               >
-                · {t('deck.pending', { count: pending })}
+                · {t('deck.pendingFlip', { count: pending.flip })}
+              </Typography>
+            ) : null}
+            {pending ? (
+              <Typography
+                variant="caption"
+                color={pending.compose > 0 ? 'secondary.main' : 'text.secondary'}
+                sx={{ fontWeight: pending.compose > 0 ? 600 : 'inherit' }}
+              >
+                · {t('deck.pendingCompose', { count: pending.compose })}
               </Typography>
             ) : null}
           </Stack>

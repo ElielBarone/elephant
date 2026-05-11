@@ -23,9 +23,14 @@ export interface Deck {
 
 export type StudyPhase = 'learning' | 'review' | 'relearning'
 
+export type StudyMode = 'flip' | 'compose'
+
+export const studyModes: readonly StudyMode[] = ['flip', 'compose'] as const
+
 export interface CardSchedule {
   deckId: string
   cardId: string
+  mode: StudyMode
   phase: StudyPhase
   ease: number
   intervalDays: number
