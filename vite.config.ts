@@ -12,7 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['elephant-logo.png', 'icons.svg', 'decks/**/*.json'],
+      includeAssets: ['favicon.svg', 'icon.png', 'icons.svg', 'decks/**/*.json'],
       manifest: {
         name: 'Elephant',
         short_name: 'Elephant',
@@ -23,10 +23,22 @@ export default defineConfig({
         start_url: '.',
         icons: [
           {
-            src: 'elephant-logo.png',
-            sizes: '380x430',
+            src: 'favicon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any',
+          },
+          {
+            src: 'icon.png',
+            sizes: '158x158',
             type: 'image/png',
             purpose: 'any',
+          },
+          {
+            src: 'icon.png',
+            sizes: '158x158',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       },
