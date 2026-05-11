@@ -5,6 +5,7 @@ import { WelcomeSplash } from '@/components/WelcomeSplash'
 import { DeckHomePage } from '@/pages/DeckHomePage'
 import { HomePage } from '@/pages/HomePage'
 import { PhrasesPage } from '@/pages/PhrasesPage'
+import { StudyDonePage } from '@/pages/StudyDonePage'
 import { StudyPage } from '@/pages/StudyPage'
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/deck/:deckId" element={<DeckHomePage />} />
           <Route path="/deck/:deckId/study" element={<StudyPage />} />
+          <Route path="/deck/:deckId/study/done" element={<StudyDonePage />} />
           <Route path="/deck/:deckId/phrases" element={<PhrasesPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

@@ -10,16 +10,17 @@ import type { Deck } from '@/types/models'
 
 export interface DeckCardProps {
   deck: Deck
+  pending?: number
   onOpen: () => void
 }
 
-export function DeckCard({ deck, onOpen }: DeckCardProps) {
+export function DeckCard({ deck, pending, onOpen }: DeckCardProps) {
   const { t } = useTranslation()
   return (
     <Card variant="outlined">
       <CardActionArea onClick={onOpen}>
         <CardContent>
-          
+
           <Stack
             direction="row"
             alignItems="center"
@@ -36,9 +37,20 @@ export function DeckCard({ deck, onOpen }: DeckCardProps) {
             />
             <Typography variant="h6" >{deck.title}</Typography>
           </Stack>
-          <Typography variant="caption" color="text.secondary">
-            {t('deck.cards', { count: deck.phrases.length })}
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+            <Typography variant="caption" color="text.secondary">
+              {t('deck.cards', { count: deck.phrases.length })}
+            </Typography>
+            {pending !== undefined ? (
+              <Typography
+                variant="caption"
+                color={pending > 0 ? 'primary.main' : 'text.secondary'}
+                sx={{ fontWeight: pending > 0 ? 600 : 'inherit' }}
+              >
+                · {t('deck.pending', { count: pending })}
+              </Typography>
+            ) : null}
+          </Stack>
         </CardContent>
       </CardActionArea>
     </Card>

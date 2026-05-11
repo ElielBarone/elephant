@@ -23,6 +23,7 @@ export default {
   deck: {
     deckLabel: 'Deck',
     cards: '{{count}} cards',
+    pending: '{{count}} pendentes',
     native: 'Nativo',
     learning: 'Aprendizagem',
     autoFlipByVoice: 'Auto-flip por voz',

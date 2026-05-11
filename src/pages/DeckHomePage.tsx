@@ -22,6 +22,7 @@ import {
   deleteDeck,
   duplicateDeck,
   getDeck,
+  getDeckStats,
   saveDeck,
   writeLastDeckId,
 } from '@/lib/db/deckStorage'
@@ -36,6 +37,7 @@ export function DeckHomePage() {
   const { deckId } = useParams()
   const navigate = useNavigate()
   const [deck, setDeck] = useState<Deck | null>(null)
+  const [pending, setPending] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [renameOpen, setRenameOpen] = useState(false)
@@ -50,11 +52,16 @@ export function DeckHomePage() {
       }
       setLoading(true)
       const found = await getDeck(deckId)
-      if (!cancelled) {
-        setDeck(found ?? null)
-        setLoading(false)
-        if (found) {
-          writeLastDeckId(found.id)
+      if (cancelled) {
+        return
+      }
+      setDeck(found ?? null)
+      setLoading(false)
+      if (found) {
+        writeLastDeckId(found.id)
+        const stats = await getDeckStats(found, Date.now())
+        if (!cancelled) {
+          setPending(stats.pending)
         }
       }
     })()
@@ -119,7 +126,17 @@ export function DeckHomePage() {
           <Typography variant="h4">
             {deck.title}
           </Typography>
-          <Chip label={t('deck.cards', { count: deck.phrases.length })} variant="outlined" sx={{ width: 'fit-content'}}/>
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+            <Chip label={t('deck.cards', { count: deck.phrases.length })} variant="outlined" sx={{ width: 'fit-content'}}/>
+            {pending !== null ? (
+              <Chip
+                label={t('deck.pending', { count: pending })}
+                color={pending > 0 ? 'primary' : 'default'}
+                variant={pending > 0 ? 'filled' : 'outlined'}
+                sx={{ width: 'fit-content' }}
+              />
+            ) : null}
+          </Stack>
         </Typography>
 
         <Stack direction="row" spacing={3} flexWrap="wrap"  useFlexGap sx={{ mt: 1 }}>

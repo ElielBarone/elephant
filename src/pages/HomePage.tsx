@@ -27,6 +27,7 @@ import { deckCreateSchema, type DeckCreateValues } from '@/lib/forms/schemas'
 import {
   copyBundledDeck,
   createEmptyDeck,
+  getDeckStats,
   listDeckRecords,
 } from '@/lib/db/deckStorage'
 import type { Deck, Idiom } from '@/types/models'
@@ -46,6 +47,7 @@ export function HomePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [decks, setDecks] = useState<Deck[]>([])
+  const [pendingByDeck, setPendingByDeck] = useState<Record<string, number>>({})
   const [catalog, setCatalog] = useState<CatalogPayload | null>(null)
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [busyFile, setBusyFile] = useState<string | null>(null)
@@ -58,7 +60,16 @@ export function HomePage() {
   )
 
   const refreshDecks = useCallback(async () => {
-    setDecks(await listDeckRecords())
+    const next = await listDeckRecords()
+    setDecks(next)
+    const now = Date.now()
+    const entries = await Promise.all(
+      next.map(async (deck) => {
+        const { pending } = await getDeckStats(deck, now)
+        return [deck.id, pending] as const
+      }),
+    )
+    setPendingByDeck(Object.fromEntries(entries))
   }, [])
 
   useEffect(() => {
@@ -148,6 +159,7 @@ export function HomePage() {
               <DeckCard
                 key={deck.id}
                 deck={deck}
+                pending={pendingByDeck[deck.id]}
                 onOpen={() => navigate(`/deck/${deck.id}`)}
               />
             ))}

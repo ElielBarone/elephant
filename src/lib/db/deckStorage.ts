@@ -77,6 +77,22 @@ export async function deleteDeck(deckId: string): Promise<void> {
   await tx.done
 }
 
+export async function getDeckStats(
+  deck: Deck,
+  now: number,
+): Promise<{ total: number; pending: number }> {
+  const schedules = await listScheduling(deck.id)
+  const scheduleMap = new Map(schedules.map((s) => [s.cardId, s]))
+  let pending = 0
+  for (const phrase of deck.phrases) {
+    const schedule = scheduleMap.get(phrase.id)
+    if (!schedule || schedule.due <= now) {
+      pending += 1
+    }
+  }
+  return { total: deck.phrases.length, pending }
+}
+
 export async function listScheduling(deckId: string): Promise<CardSchedule[]> {
   const db = await openElephantDb()
   const store = db.transaction('scheduling').objectStore('scheduling')

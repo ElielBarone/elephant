@@ -15,7 +15,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { FlagsRelated } from '@/components/FlagsRelated'
 import { FlipCard } from '@/components/FlipCard'
 import { RatingBar } from '@/components/RatingBar'
-import { useSplashScreen } from '@/components/SplashScreen'
 import {
   ensureSchedulingForDeck,
   getDeck,
@@ -66,14 +65,14 @@ export function StudyPage() {
   const { deckId } = useParams()
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [, splashScreenActions] = useSplashScreen()
   const [deck, setDeck] = useState<Deck | null>(null)
   const [rows, setRows] = useState<StudyRow[]>([])
+  const [pendingCount, setPendingCount] = useState(0)
+  const [initialPending, setInitialPending] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [flipped, setFlipped] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [sessionRated, setSessionRated] = useState(0)
-  const [sessionTarget, setSessionTarget] = useState(0)
   const [speechSupported, setSpeechSupported] = useState<boolean | null>(null)
   const [listening, setListening] = useState(false)
   const [ttsPlaying, setTtsPlaying] = useState(false)
@@ -83,7 +82,6 @@ export function StudyPage() {
   const [matchedPromptWords, setMatchedPromptWords] = useState<boolean[]>([])
   const speechRecognizerRef = useRef<ReturnType<typeof createSpeechRecognizer> | null>(null)
   const flipTimeoutRef = useRef<number | null>(null)
-  const completionSplashVisible = useRef(false)
 
   const refresh = useCallback(async () => {
     if (!deckId) {
@@ -94,13 +92,18 @@ export function StudyPage() {
     if (!found) {
       setDeck(null)
       setRows([])
+      setPendingCount(0)
       setLoading(false)
       return
     }
     await ensureSchedulingForDeck(found, now)
     const schedules = await listScheduling(deckId)
+    const nextRows = buildRows(found, schedules, now)
+    const due = nextRows.filter((row) => row.schedule.due <= now).length
     setDeck(found)
-    setRows(buildRows(found, schedules, now))
+    setRows(nextRows)
+    setPendingCount(due)
+    setInitialPending((prev) => (prev === null ? due : prev))
     setLoading(false)
   }, [deckId])
 
@@ -112,55 +115,8 @@ export function StudyPage() {
     setActiveIndex(0)
     setFlipped(false)
     setSessionRated(0)
-    setSessionTarget(0)
-    completionSplashVisible.current = false
+    setInitialPending(null)
   }, [deckId])
-
-  useEffect(() => {
-    if (rows.length > 0 && sessionTarget === 0) {
-      setSessionTarget(rows.length)
-    }
-  }, [rows.length, sessionTarget])
-
-  useEffect(() => {
-    if (!deck || sessionTarget === 0 || sessionRated < sessionTarget || completionSplashVisible.current) {
-      return
-    }
-
-    const startAgain = () => {
-      setFlipped(false)
-      setCurrentPhaseIndex(0)
-      setActiveIndex(0)
-      setSessionRated(0)
-      setSessionTarget(rows.length)
-      completionSplashVisible.current = false
-      splashScreenActions.hide()
-    }
-
-    const openDecks = () => {
-      splashScreenActions.hide()
-      navigate('/')
-    }
-
-    splashScreenActions.show(
-      'well-done',
-      {
-        title: t('study.congratulationsTitle'),
-        message: t('study.congratulationsMessage'),
-      },
-      'happy',
-      <Stack spacing={1.5}>        
-        <Button variant="contained" onClick={openDecks}>
-          {t('study.backToDecks')}
-        </Button>
-        <Button variant="outlined" onClick={startAgain}>
-          {t('study.startAgain')}
-        </Button>
-      </Stack>,
-      0,
-    )
-    completionSplashVisible.current = true
-  }, [deck, navigate, rows.length, sessionRated, sessionTarget, splashScreenActions])
 
   const safeIndex = Math.min(activeIndex, Math.max(0, rows.length - 1))
   const active = rows[safeIndex]
@@ -235,11 +191,12 @@ export function StudyPage() {
   }, [active?.phrase.id, deck?.id])
 
   const progress = useMemo(() => {
-    if (sessionTarget === 0) {
+    if (initialPending === null || initialPending === 0) {
       return 0
     }
-    return Math.min(100, (sessionRated / sessionTarget) * 100)
-  }, [sessionRated, sessionTarget])
+    const done = initialPending - pendingCount
+    return Math.min(100, Math.max(0, (done / initialPending) * 100))
+  }, [initialPending, pendingCount])
 
   const promptTtsOn = deck?.ttsPromptEnabled !== false
   const answerTtsOn = deck?.ttsAnswerEnabled !== false
@@ -451,17 +408,26 @@ export function StudyPage() {
   }, [currentPhase, ttsPlaying])
 
   const handleRate = useCallback(async (rating: Rating) => {
-    if (!active) {
+    if (!active || !deckId) {
       return
     }
-    const next = applyRating(active.schedule, rating, Date.now())
+    const now = Date.now()
+    const next = applyRating(active.schedule, rating, now)
     await saveScheduling(next)
+    setSessionRated((count) => count + 1)
+
+    const schedules = await listScheduling(deckId)
+    const pendingAfter = schedules.filter((s) => s.due <= now).length
+    if (pendingAfter === 0) {
+      navigate(`/deck/${deckId}/study/done`, { replace: true })
+      return
+    }
+
     setFlipped(false)
     setCurrentPhaseIndex(0)
-    setSessionRated((count) => count + 1)
     await refresh()
     setActiveIndex(0)
-  }, [active, refresh])
+  }, [active, deckId, navigate, refresh])
 
   const handleRetrySpeechRecognition = useCallback(() => {
     setSpeechError(null)
@@ -576,13 +542,22 @@ export function StudyPage() {
       ) : null}
 
       <LinearProgress variant="determinate" value={progress} sx={{ height: 8, borderRadius: 999 }} />
-      <Typography variant="caption" color="text.secondary">
-        {t('study.reviewedQueue', {
-          reviewed: sessionRated,
-          total: sessionTarget,
-          queue: rows.length,
-        })}
-      </Typography>
+      <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Typography variant="caption" color="text.secondary">
+          {t('study.reviewedQueue', {
+            reviewed: sessionRated,
+            total: initialPending ?? 0,
+            queue: rows.length,
+          })}
+        </Typography>
+        <Typography
+          variant="caption"
+          color={pendingCount > 0 ? 'primary.main' : 'text.secondary'}
+          sx={{ fontWeight: pendingCount > 0 ? 600 : 'inherit' }}
+        >
+          {t('deck.pending', { count: pendingCount })}
+        </Typography>
+      </Stack>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         <FlipCard
