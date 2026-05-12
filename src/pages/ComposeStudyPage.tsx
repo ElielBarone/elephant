@@ -2,12 +2,14 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined'
 import MicIcon from '@mui/icons-material/Mic'
+import SendIcon from '@mui/icons-material/Send'
 import VolumeOffIcon from '@mui/icons-material/VolumeOff'
 import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import IconButton from '@mui/material/IconButton'
+import InputAdornment from '@mui/material/InputAdornment'
 import LinearProgress from '@mui/material/LinearProgress'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
@@ -29,11 +31,12 @@ import {
   countPhraseWords,
   pickRandomHiddenWordIndex,
 } from '@/lib/scheduler/composeScore'
-import { buildComposeFlowConfig, ComposePhase } from '@/lib/scheduler/cardFlow'
 import { applyRating, sortDueFirst } from '@/lib/scheduler/scheduler'
 import { speakWithIdiom } from '@/lib/tts/speak'
 import { createSpeechRecognizer, isSpeechRecognitionSupported } from '@/lib/voice/speechRecognition'
 import type { CardSchedule, Deck, Idiom, Phrase } from '@/types/models'
+
+type ComposeFlowStatus = 'speech' | 'listening' | 'idle' | 'inputting' | 'rating'
 
 interface StudyRow {
   phrase: Phrase
@@ -45,6 +48,16 @@ const speechLanguageByIdiom: Record<string, string> = {
   enUS: 'en-US',
   enGB: 'en-GB',
   itIT: 'it-IT',
+}
+
+function initialComposeFlowStatus(deck: Deck): ComposeFlowStatus {
+  if (deck.ttsAnswerEnabled !== false) {
+    return 'speech'
+  }
+  if (deck.voiceAutoFlipEnabled !== false && isSpeechRecognitionSupported()) {
+    return 'listening'
+  }
+  return 'idle'
 }
 
 function buildRows(deck: Deck, schedules: CardSchedule[], now: number): StudyRow[] {
@@ -73,26 +86,37 @@ export function ComposeStudyPage() {
   const [sessionRated, setSessionRated] = useState(0)
   const [attempt, setAttempt] = useState('')
   const [tipRevealedIndices, setTipRevealedIndices] = useState<Set<number>>(new Set())
-  const [submitted, setSubmitted] = useState(false)
   const [acceptanceFlash, setAcceptanceFlash] = useState<'accepted' | 'rejected' | null>(null)
-  const [listening, setListening] = useState(false)
+  const [flowStatus, setFlowStatus] = useState<ComposeFlowStatus>('idle')
   const [speechSupported, setSpeechSupported] = useState<boolean | null>(() =>
     isSpeechRecognitionSupported(),
   )
-  const [ttsPlaying, setTtsPlaying] = useState(false)
-  const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0)
   const speechRecognizerRef = useRef<ReturnType<typeof createSpeechRecognizer> | null>(null)
   const idleSubmitTimerRef = useRef<number | null>(null)
+  const advanceAfterRatingTimerRef = useRef<number | null>(null)
   const submittedRef = useRef(false)
+  const lastAttemptChangeFromSpeechRef = useRef(false)
+  const flowStatusRef = useRef<ComposeFlowStatus>('idle')
 
   useEffect(() => {
-    submittedRef.current = submitted
-  }, [submitted])
+    flowStatusRef.current = flowStatus
+  }, [flowStatus])
+
+  useEffect(() => {
+    submittedRef.current = flowStatus === 'rating'
+  }, [flowStatus])
 
   const clearIdleSubmitTimer = useCallback(() => {
     if (idleSubmitTimerRef.current !== null) {
       window.clearTimeout(idleSubmitTimerRef.current)
       idleSubmitTimerRef.current = null
+    }
+  }, [])
+
+  const clearAdvanceAfterRatingTimer = useCallback(() => {
+    if (advanceAfterRatingTimerRef.current !== null) {
+      window.clearTimeout(advanceAfterRatingTimerRef.current)
+      advanceAfterRatingTimerRef.current = null
     }
   }, [])
 
@@ -132,24 +156,53 @@ export function ComposeStudyPage() {
 
   const safeIndex = Math.min(activeIndex, Math.max(0, rows.length - 1))
   const active = rows[safeIndex]
+  const activePhraseIdRef = useRef<string | undefined>(undefined)
+  const deckRef = useRef<Deck | null>(null)
+
+  useEffect(() => {
+    activePhraseIdRef.current = active?.phrase.id
+  }, [active?.phrase.id])
+
+  useEffect(() => {
+    deckRef.current = deck
+  }, [deck])
 
   useEffect(() => {
     setAttempt('')
     setTipRevealedIndices(new Set())
-    setSubmitted(false)
     setAcceptanceFlash(null)
-    setCurrentPhaseIndex(0)
     clearIdleSubmitTimer()
-  }, [active?.phrase.id, clearIdleSubmitTimer])
+    clearAdvanceAfterRatingTimer()
+    lastAttemptChangeFromSpeechRef.current = false
+    submittedRef.current = false
+    const currentDeck = deckRef.current
+    if (currentDeck) {
+      setFlowStatus(initialComposeFlowStatus(currentDeck))
+    } else {
+      setFlowStatus('idle')
+    }
+  }, [active?.phrase.id, clearAdvanceAfterRatingTimer, clearIdleSubmitTimer])
+
+  const isRating = flowStatus === 'rating'
 
   const liveScore = useMemo(() => {
     if (!active) {
       return null
     }
     return computeComposeScore(active.phrase.original, attempt, tipRevealedIndices, {
-      submitted,
+      submitted: isRating,
     })
-  }, [active, attempt, tipRevealedIndices, submitted])
+  }, [active, attempt, tipRevealedIndices, isRating])
+
+  const cardWordScore = useMemo(() => {
+    if (!active) {
+      return null
+    }
+    const attemptForCard = isRating ? attempt : ''
+    return computeComposeScore(active.phrase.original, attemptForCard, tipRevealedIndices, {
+      submitted: isRating,
+    })
+  }, [active, attempt, tipRevealedIndices, isRating])
 
   const totalWords = useMemo(
     () => (active ? countPhraseWords(active.phrase.original) : 0),
@@ -157,11 +210,11 @@ export function ComposeStudyPage() {
   )
 
   const allWordsRevealedOrCorrect = useMemo(() => {
-    if (!liveScore) {
+    if (!cardWordScore) {
       return true
     }
-    return liveScore.wordStates.every((state) => state !== 'hidden')
-  }, [liveScore])
+    return cardWordScore.wordStates.every((state) => state !== 'hidden')
+  }, [cardWordScore])
 
   const progress = useMemo(() => {
     if (initialPending === null || initialPending === 0) {
@@ -176,31 +229,28 @@ export function ComposeStudyPage() {
     if (recognizer) {
       recognizer.stop()
     }
-    setTtsPlaying(true)
     try {
       await speakWithIdiom(text, idiom)
     } catch {
       // ignore
-    } finally {
-      setTtsPlaying(false)
     }
   }, [])
 
   const speakTranslation = useCallback(() => {
-    if (!deck || !active) {
+    if (!deck || !active || flowStatus === 'rating') {
       return
     }
     if (deck.ttsAnswerEnabled === false) {
       return
     }
-    void playText(active.phrase.translated, deck.nativeIdiom)
-  }, [active, deck, playText])
+    setFlowStatus('speech')
+  }, [active, deck, flowStatus])
 
   const handleRevealTip = useCallback(() => {
-    if (!liveScore) {
+    if (!cardWordScore) {
       return
     }
-    const index = pickRandomHiddenWordIndex(liveScore.wordStates)
+    const index = pickRandomHiddenWordIndex(cardWordScore.wordStates)
     if (index === null) {
       return
     }
@@ -209,32 +259,46 @@ export function ComposeStudyPage() {
       next.add(index)
       return next
     })
-  }, [liveScore])
+  }, [cardWordScore])
 
   const startListeningOnce = useCallback(
-    (options?: { onEnd?: () => void }): boolean => {
+    (options?: {
+      continuous?: boolean
+      keepListeningIndicatorAcrossRestarts?: boolean
+      onEnd?: () => void
+    }): boolean => {
       if (!deck || !active) {
         return false
       }
+      const phraseIdWhenStarted = active.phrase.id
       const language = speechLanguageByIdiom[deck.learningIdiom] ?? 'en-US'
       const recognizer = createSpeechRecognizer({
         lang: language,
-        continuous: false,
+        continuous: options?.continuous ?? false,
         interimResults: false,
         maxAlternatives: 1,
-        onStart: () => setListening(true),
+        onStart: () => {},
         onResult: (transcript) => {
+          lastAttemptChangeFromSpeechRef.current = true
           setAttempt((prev) => {
             const trimmed = prev.trim()
             return trimmed.length === 0 ? transcript : `${trimmed} ${transcript}`
           })
         },
         onError: () => {
-          setListening(false)
+          if (activePhraseIdRef.current !== phraseIdWhenStarted) {
+            return
+          }
+          setFlowStatus('idle')
           options?.onEnd?.()
         },
         onEnd: () => {
-          setListening(false)
+          if (activePhraseIdRef.current !== phraseIdWhenStarted) {
+            return
+          }
+          if (!options?.keepListeningIndicatorAcrossRestarts) {
+            setFlowStatus('idle')
+          }
           options?.onEnd?.()
         },
       })
@@ -248,6 +312,9 @@ export function ComposeStudyPage() {
         recognizer.start()
         return true
       } catch {
+        if (activePhraseIdRef.current === phraseIdWhenStarted) {
+          setFlowStatus('idle')
+        }
         options?.onEnd?.()
         return false
       }
@@ -255,9 +322,19 @@ export function ComposeStudyPage() {
     [active, deck],
   )
 
-  const handleStartListening = useCallback(() => {
-    startListeningOnce()
-  }, [startListeningOnce])
+  const handleMicToggle = useCallback(() => {
+    if (flowStatus === 'rating' || flowStatus === 'speech' || speechSupported === false) {
+      return
+    }
+    if (flowStatus === 'listening') {
+      speechRecognizerRef.current?.stop()
+      setFlowStatus('idle')
+      return
+    }
+    if (flowStatus === 'idle' || flowStatus === 'inputting') {
+      setFlowStatus('listening')
+    }
+  }, [flowStatus, speechSupported])
 
   useEffect(() => {
     return () => {
@@ -266,70 +343,113 @@ export function ComposeStudyPage() {
         recognizer.stop()
       }
       clearIdleSubmitTimer()
+      clearAdvanceAfterRatingTimer()
     }
-  }, [clearIdleSubmitTimer])
-
-  const composePhases = useMemo<ComposePhase[]>(
-    () => (deck ? buildComposeFlowConfig(deck) : []),
-    [deck],
-  )
-  const currentPhase = composePhases[currentPhaseIndex]
-
-  const advancePhase = useCallback(() => {
-    setCurrentPhaseIndex((index) => Math.min(index + 1, composePhases.length - 1))
-  }, [composePhases.length])
+  }, [clearAdvanceAfterRatingTimer, clearIdleSubmitTimer])
 
   useEffect(() => {
-    if (!active || !deck || submitted) {
-      return
-    }
-    if (!currentPhase) {
+    if (!active || !deck || flowStatus !== 'speech') {
       return
     }
 
-    let isCurrent = true
+    let cancelled = false
 
-    if (currentPhase === ComposePhase.PlayTranslationTts) {
-      void (async () => {
-        await playText(active.phrase.translated, deck.nativeIdiom)
-        if (!isCurrent) {
-          return
-        }
-        advancePhase()
-      })()
-      return () => {
-        isCurrent = false
+    void (async () => {
+      await playText(active.phrase.translated, deck.nativeIdiom)
+      if (cancelled) {
+        return
       }
-    }
-
-    if (currentPhase === ComposePhase.ListenAnswer) {
-      if (speechSupported === false) {
-        advancePhase()
-        return () => {
-          isCurrent = false
-        }
-      }
-      startListeningOnce({
-        onEnd: () => {
-          if (!isCurrent) {
-            return
-          }
-          advancePhase()
-        },
-      })
-      return () => {
-        isCurrent = false
-        const recognizer = speechRecognizerRef.current
-        if (recognizer) {
-          recognizer.stop()
-        }
-      }
-    }
+      const nextListening =
+        deck.voiceAutoFlipEnabled !== false && speechSupported !== false
+      setFlowStatus(nextListening ? 'listening' : 'idle')
+    })()
 
     return () => {
-      isCurrent = false
+      cancelled = true
     }
-  }, [active, advancePhase, currentPhase, deck, playText, speechSupported, startListeningOnce, submitted])
+  }, [
+    active,
+    deck,
+    active?.phrase.id,
+    deck?.id,
+    deck?.nativeIdiom,
+    deck?.ttsAnswerEnabled,
+    deck?.voiceAutoFlipEnabled,
+    flowStatus,
+    playText,
+    speechSupported,
+  ])
+
+  useEffect(() => {
+    if (!active || !deck || flowStatus !== 'listening') {
+      return
+    }
+    if (speechSupported === false) {
+      return
+    }
+
+    let cancelled = false
+    let pendingRestart: number | null = null
+
+    const clearPendingRestart = () => {
+      if (pendingRestart !== null) {
+        window.clearTimeout(pendingRestart)
+        pendingRestart = null
+      }
+    }
+
+    const runContinuousSession = () => {
+      if (cancelled || flowStatusRef.current !== 'listening') {
+        return
+      }
+      clearPendingRestart()
+      startListeningOnce({
+        continuous: true,
+        keepListeningIndicatorAcrossRestarts: true,
+        onEnd: () => {
+          if (cancelled || flowStatusRef.current !== 'listening') {
+            return
+          }
+          pendingRestart = window.setTimeout(() => {
+            pendingRestart = null
+            if (cancelled || flowStatusRef.current !== 'listening') {
+              return
+            }
+            runContinuousSession()
+          }, 450)
+        },
+      })
+    }
+
+    runContinuousSession()
+
+    return () => {
+      cancelled = true
+      clearPendingRestart()
+      const recognizer = speechRecognizerRef.current
+      if (recognizer) {
+        recognizer.stop()
+      }
+    }
+  }, [
+    active,
+    deck,
+    active?.phrase.id,
+    deck?.id,
+    deck?.learningIdiom,
+    flowStatus,
+    speechSupported,
+    startListeningOnce,
+  ])
+
+  useEffect(() => {
+    if (flowStatus === 'inputting' || flowStatus === 'rating' || flowStatus === 'speech') {
+      const recognizer = speechRecognizerRef.current
+      if (recognizer) {
+        recognizer.stop()
+      }
+    }
+  }, [flowStatus])
 
   const advanceAfterRating = useCallback(async () => {
     if (!deckId) {
@@ -355,14 +475,14 @@ export function ComposeStudyPage() {
     if (recognizer) {
       recognizer.stop()
     }
+    setFlowStatus('rating')
+    submittedRef.current = true
     const finalScore = computeComposeScore(
       active.phrase.original,
       attempt,
       tipRevealedIndices,
       { submitted: true },
     )
-    setSubmitted(true)
-    submittedRef.current = true
     setAcceptanceFlash(finalScore.accepted ? 'accepted' : 'rejected')
 
     const now = Date.now()
@@ -370,13 +490,24 @@ export function ComposeStudyPage() {
     await saveScheduling(next)
     setSessionRated((count) => count + 1)
 
-    window.setTimeout(() => {
+    clearAdvanceAfterRatingTimer()
+    const delayMs = finalScore.accepted ? 1200 : 5000
+    advanceAfterRatingTimerRef.current = window.setTimeout(() => {
+      advanceAfterRatingTimerRef.current = null
       void advanceAfterRating()
-    }, 1200)
-  }, [active, advanceAfterRating, attempt, clearIdleSubmitTimer, deckId, tipRevealedIndices])
+    }, delayMs)
+  }, [
+    active,
+    advanceAfterRating,
+    attempt,
+    clearAdvanceAfterRatingTimer,
+    clearIdleSubmitTimer,
+    deckId,
+    tipRevealedIndices,
+  ])
 
   useEffect(() => {
-    if (!active || submitted) {
+    if (!active || flowStatus === 'rating' || flowStatus === 'speech') {
       clearIdleSubmitTimer()
       return
     }
@@ -385,6 +516,11 @@ export function ComposeStudyPage() {
       return
     }
     if (!liveScore) {
+      return
+    }
+
+    if (!lastAttemptChangeFromSpeechRef.current) {
+      clearIdleSubmitTimer()
       return
     }
 
@@ -398,13 +534,16 @@ export function ComposeStudyPage() {
     const delay = liveScore.accepted ? 700 : 1500
     idleSubmitTimerRef.current = window.setTimeout(() => {
       idleSubmitTimerRef.current = null
+      if (!lastAttemptChangeFromSpeechRef.current) {
+        return
+      }
       void handleCheck()
     }, delay)
 
     return () => {
       clearIdleSubmitTimer()
     }
-  }, [active, attempt, clearIdleSubmitTimer, handleCheck, liveScore, submitted])
+  }, [active, attempt, clearIdleSubmitTimer, flowStatus, handleCheck, liveScore])
 
   if (!deckId) {
     return <Alert severity="error">{t('general.missingDeck')}</Alert>
@@ -445,7 +584,20 @@ export function ComposeStudyPage() {
   const hasDue = rows.some((row) => row.schedule.due <= Date.now())
   const speakDisabled = deck.ttsAnswerEnabled === false
 
-  const tipDisabled = submitted || allWordsRevealedOrCorrect
+  const tipDisabled = isRating || allWordsRevealedOrCorrect
+
+  const handleAnswerFocus = () => {
+    speechRecognizerRef.current?.stop()
+    setFlowStatus('inputting')
+  }
+
+  const handleAnswerBlur = () => {
+    if (deck.voiceAutoFlipEnabled !== false && speechSupported !== false) {
+      setFlowStatus('listening')
+    } else {
+      setFlowStatus('idle')
+    }
+  }
 
   return (
     <Stack spacing={2.5} sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', minHeight: 0 }}>
@@ -516,57 +668,22 @@ export function ComposeStudyPage() {
         answer={
           <WordReveal
             expected={active.phrase.original}
-            wordStates={liveScore.wordStates}
+            wordStates={cardWordScore.wordStates}
             onDark
           />
         }
         answerMeta={
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)' }}>
             {t('compose.score', {
-              correct: liveScore.correctCount,
+              correct: cardWordScore.correctCount,
               total: totalWords,
-              percent: Math.round(liveScore.percentage),
+              percent: Math.round(cardWordScore.percentage),
             })}
           </Typography>
         }
       />
 
-
-      <Stack direction="row" spacing={1} alignItems="center">
-        <TextField
-          fullWidth
-          size="small"
-          autoFocus
-          value={attempt}
-          onChange={(event) => setAttempt(event.target.value)}
-          placeholder={t('compose.yourAnswer')}
-          disabled={submitted}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault()
-              void handleCheck()
-            }
-          }}
-          slotProps={
-            {
-              input: {
-                endAdornment: 
-                <IconButton
-          aria-label={t('compose.startListening')}
-          onClick={handleStartListening}
-          disabled={submitted || speechSupported === false || ttsPlaying}
-          color={listening ? 'primary' : 'default'}
-        >
-          <MicIcon />
-        </IconButton>
-              }
-            }
-          }
-        />
-        
-      </Stack>
-
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75, minHeight: 24 }}>
+<Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.75, minHeight: 24 }}>
         {acceptanceFlash === 'accepted' ? (
           <Stack direction="row" alignItems="center" spacing={0.5}>
             <CheckCircleIcon color="success" fontSize="small" />
@@ -577,21 +694,64 @@ export function ComposeStudyPage() {
         ) : null}
         {acceptanceFlash === 'rejected' ? (
           <Typography variant="caption" color="warning.main">
-            
             {t('compose.notAccepted', { percent: Math.round(liveScore.percentage) })}
           </Typography>
         ) : null}
       </Box>
 
-      <Button
-          variant="outlined"          
-          color="warning"
-          startIcon={<LightbulbOutlinedIcon />}
-          onClick={handleRevealTip}
-          disabled={tipDisabled}
+      <Stack direction="row" spacing={1} alignItems="center">
+        <TextField
+          fullWidth
+          size="small"
+          value={attempt}
+          onChange={(event) => {
+            lastAttemptChangeFromSpeechRef.current = false
+            setAttempt(event.target.value)
+          }}
+          onFocus={handleAnswerFocus}
+          onBlur={handleAnswerBlur}
+          placeholder={t('compose.yourAnswer')}
+          disabled={isRating}
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label={t('compose.check')}
+                    onClick={() => void handleCheck()}
+                    disabled={isRating || attempt.trim().length === 0}
+                    edge="end"
+                  >
+                    <SendIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <IconButton
+          aria-label={t('compose.startListening')}
+          onClick={handleMicToggle}
+          disabled={
+            isRating || flowStatus === 'speech' || speechSupported === false
+          }
+          color={flowStatus === 'listening' ? 'primary' : 'default'}
         >
-          {t('compose.tip')}
-        </Button>
+          <MicIcon />
+        </IconButton>
+      </Stack>
+
+     
+
+      <Button
+        variant="outlined"
+        color="warning"
+        startIcon={<LightbulbOutlinedIcon />}
+        onClick={handleRevealTip}
+        disabled={tipDisabled}
+      >
+        {t('compose.tip')}
+      </Button>
     </Stack>
   )
 }

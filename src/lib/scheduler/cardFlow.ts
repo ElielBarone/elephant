@@ -33,23 +33,3 @@ export function buildCardFlowConfig(deck: Deck): CardFlowConfig {
 
   return { front, back }
 }
-
-export const ComposePhase = {
-  PlayTranslationTts: 'playTranslationTts',
-  ListenAnswer: 'listenAnswer',
-  AwaitInput: 'awaitInput',
-} as const
-
-export type ComposePhase = typeof ComposePhase[keyof typeof ComposePhase]
-
-export function buildComposeFlowConfig(deck: Deck): ComposePhase[] {
-  const phases: ComposePhase[] = []
-  if (deck.ttsAnswerEnabled !== false) {
-    phases.push(ComposePhase.PlayTranslationTts)
-  }
-  if (deck.voiceAutoFlipEnabled !== false) {
-    phases.push(ComposePhase.ListenAnswer)
-  }
-  phases.push(ComposePhase.AwaitInput)
-  return phases
-}
