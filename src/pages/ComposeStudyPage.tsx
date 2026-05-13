@@ -572,7 +572,7 @@ export function ComposeStudyPage() {
     )
   }
 
-  if (!active || !liveScore) {
+  if (!active || !liveScore || !cardWordScore) {
     return <Alert severity="info">{t('study.noStudyRows')}</Alert>
   }
 
