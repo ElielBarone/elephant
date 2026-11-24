@@ -120,7 +120,7 @@ export function StudyPage() {
 
     const prompt = `Explain '${active.phrase.original}' (${active.phrase.translated} in ${deck.learningIdiom}). Give 2 examples in different contexts. Respond in ${deck.nativeIdiom}.`
     const encodedPrompt = encodeURIComponent(prompt)
-    const url = `https://chat.openai.com/?model=gpt-4&q=${encodedPrompt}`
+    const url = `https://chatgpt.com/?model=gpt-4&q=${encodedPrompt}&temporary-chat=true`
 
     return (
       <Button
